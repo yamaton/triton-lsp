@@ -1,0 +1,40 @@
+{
+  "name": "triton-lsp",
+  "version": "0.0.1",
+  "description": "Language server for Triton notebook",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "tsc && node dist/main.js",
+    "test": "mocha -r ts-node/register test/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yamaton/triton-lsp.git"
+  },
+  "keywords": [
+    "lsp"
+  ],
+  "author": "Yamato Matsuoka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yamaton/triton-lsp/issues"
+  },
+  "homepage": "https://github.com/yamaton/triton-lsp#readme",
+  "dependencies": {
+    "better-sqlite3": "^7.5.0",
+    "node-fetch": "^2.6.7",
+    "pako": "^2.0.4",
+    "web-tree-sitter": "^0.20.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.5.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.1.0",
+    "@types/node-fetch": "^2.6.1",
+    "@types/pako": "^1.0.3",
+    "chai": "^4.3.6",
+    "eslint": "^8.12.0",
+    "mocha": "^9.2.2",
+    "ts-node": "^10.7.0"
+  }
+}
