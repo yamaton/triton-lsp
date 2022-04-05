@@ -3,7 +3,8 @@ import { SyntaxNode } from 'web-tree-sitter';
 import { CommandFetcher } from './commandFetcher';
 import { Option, Command } from './command';
 import { getCurrentNode, getMatchingOption, getContextCmdSeq, getCompletionsSubcommands, getCompletionsOptions, walkbackIfNeeded } from './analyzer';
-import LSP from 'vscode-languageserver';
+import LSP from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as utils from './utils';
 
 
@@ -15,6 +16,64 @@ async function initializeParser(): Promise<Parser> {
   parser.setLanguage(lang);
   return parser;
 }
+
+const connection = LSP.createConnection(LSP.ProposedFeatures.all);
+const documents: LSP.TextDocuments<TextDocument> = new LSP.TextDocuments(TextDocument);
+
+let hasConfigurationCapability = false;
+let hasWorkspaceFolderCapability = false;
+let hasDiagnosticRelatedInformationCapability = false;
+
+
+connection.onInitialize((params: LSP.InitializeParams) => {
+  const capabilities = params.capabilities;
+
+  // Does the client support the `workspace/configuration` request?
+  // If not, we fall back using global settings.
+  hasConfigurationCapability = !!(
+    capabilities.workspace && !!capabilities.workspace.configuration
+  );
+  hasWorkspaceFolderCapability = !!(
+    capabilities.workspace && !!capabilities.workspace.workspaceFolders
+  );
+  hasDiagnosticRelatedInformationCapability = !!(
+    capabilities.textDocument &&
+    capabilities.textDocument.publishDiagnostics &&
+    capabilities.textDocument.publishDiagnostics.relatedInformation
+  );
+
+  const result: LSP.InitializeResult = {
+    capabilities: {
+      textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
+      // Tell the client that this server supports code completion.
+      completionProvider: {
+        resolveProvider: true
+      }
+    }
+  };
+  if (hasWorkspaceFolderCapability) {
+    result.capabilities.workspace = {
+      workspaceFolders: {
+        supported: true
+      }
+    };
+  }
+  return result;
+});
+
+
+connection.onInitialized(() => {
+  if (hasConfigurationCapability) {
+    // Register for all configuration changes.
+    connection.client.register(LSP.DidChangeConfigurationNotification.type, undefined);
+  }
+  if (hasWorkspaceFolderCapability) {
+    connection.workspace.onDidChangeWorkspaceFolders(_event => {
+      connection.console.log('Workspace folder change event received.');
+    });
+  }
+});
+
 
 export async function activate(context: vscode.ExtensionContext) {
   const parser = await initializeParser();
@@ -41,9 +100,9 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         const tree = trees[document.uri.toString()];
         const commandList = fetcher.getNames();
-        let compCommands: vscode.CompletionItem[] = [];
+        let compCommands: LSP.CompletionItem[] = [];
         if (!!commandList) {
-          compCommands = commandList.map((s) => new vscode.CompletionItem(s));
+          compCommands = commandList.map((s) => LSP.CompletionItem.create(s));
         }
 
         // this is an ugly hack to get current Node
@@ -78,6 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   const hoverprovider = vscode.languages.registerHoverProvider('shellscript', {
+
     async provideHover(document, position, token) {
 
       if (!parser) {
@@ -97,12 +157,12 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!!cmdSeq && cmdSeq.length) {
           const name = cmdSeq[0].name;
           if (currentWord === name) {
-            const clearCacheCommandUri = vscode.Uri.parse(`command:h2o.clearCache?${encodeURIComponent(JSON.stringify(name))}`);
             const thisCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
             const tldrText = (!!thisCmd.tldr) ? "\n" + utils.formatTldr(thisCmd.tldr) : "";
-            const msg = new vscode.MarkdownString(`\`${name}\`` + tldrText + `\n\n[Reset](${clearCacheCommandUri})`);
-            msg.isTrusted = true;
-            return new vscode.Hover(msg);
+            const msg = `\`${name}\`` + tldrText;
+            // msg.isTrusted = true;      // [FIXME] Need this property in LSP
+            return utils.toHover(msg);
+
           } else if (cmdSeq.length > 1 && cmdSeq.some((cmd) => cmd.name === currentWord)) {
             const thatCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
             const nameSeq: string[] = [];
@@ -115,11 +175,12 @@ export async function activate(context: vscode.ExtensionContext) {
             }
             const cmdPrefixName = nameSeq.join(" ");
             const msg = `${cmdPrefixName} **${thatCmd.name}**\n\n ${thatCmd.description}`;
-            return new vscode.Hover(new vscode.MarkdownString(msg));
+            return utils.toHover(msg);
+
           } else if (cmdSeq.length) {
             const opts = getMatchingOption(currentWord, name, cmdSeq);
             const msg = utils.optsToMessage(opts);
-            return new vscode.Hover(new vscode.MarkdownString(msg));
+            return utils.toHover(msg);
           } else {
             return Promise.reject(`No hover is available for ${currentWord}`);
           }

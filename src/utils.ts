@@ -1,6 +1,6 @@
 import { Option } from "./command";
 import Parser from 'web-tree-sitter';
-import LSP from 'vscode-languageserver';
+import LSP from 'vscode-languageserver/node';
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 
@@ -93,4 +93,24 @@ export function optsToMessage(opts: Option[]): string {
     const joined = messages.join("\n\n");
     return joined;
   }
+}
+
+
+// string -> LSP.MarkupContent
+function markup(value: string): LSP.MarkupContent {
+  const res: LSP.MarkupContent = {
+    kind: LSP.MarkupKind.Markdown,
+    value: value,
+  };
+  return res;
+};
+
+
+// string -> LSP.Hover
+export function toHover(value: string): LSP.Hover {
+  const msg = markup(value);
+  const res: LSP.Hover = {
+    contents: msg
+  };
+  return res;
 }

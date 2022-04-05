@@ -1,6 +1,6 @@
 import Parser from 'web-tree-sitter';
 import { SyntaxNode } from 'web-tree-sitter';
-import LSP from 'vscode-languageserver';
+import LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { CommandFetcher } from './commandFetcher';
 import { contains, asRange, translate, lineAt } from './utils';
@@ -181,7 +181,7 @@ function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: L
 
 
 // Get subcommand completions
-export function getCompletionsSubcommands(deepestCmd: Command): vscode.CompletionItem[] {
+export function getCompletionsSubcommands(deepestCmd: Command): LSP.CompletionItem[] {
   const subcommands = getSubcommandsWithAliases(deepestCmd);
   if (subcommands && subcommands.length) {
     const compitems = subcommands.map((sub, idx) => {
@@ -196,9 +196,9 @@ export function getCompletionsSubcommands(deepestCmd: Command): vscode.Completio
 
 
 // Get option completion
-export function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: LSP.Position, cmdSeq: Command[]): vscode.CompletionItem[] {
+export function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: LSP.Position, cmdSeq: Command[]): LSP.CompletionItem[] {
   const args = getContextCmdArgs(document, root, position);
-  const compitems: vscode.CompletionItem[] = [];
+  const compitems: LSP.CompletionItem[] = [];
   const options = getOptions(cmdSeq);
   options.forEach((opt, idx) => {
     // suppress already-used options
@@ -208,7 +208,8 @@ export function getCompletionsOptions(document: TextDocument, root: SyntaxNode, 
         item.sortText = `55-${idx.toString().padStart(4)}`;
         if (opt.argument) {
           const snippet = `${name} \$\{1:${opt.argument}\}`;
-          item.insertText = new vscode.SnippetString(snippet);
+          // [TODO] replace with item.textEdit = (something: TextEdit | InsertReplace)
+          item.insertText = snippet;
         }
         compitems.push(item);
       });
@@ -218,8 +219,11 @@ export function getCompletionsOptions(document: TextDocument, root: SyntaxNode, 
 }
 
 
-function createCompletionItem(label: string, desc: string): vscode.CompletionItem {
-  return new vscode.CompletionItem({ label: label, description: desc });
+function createCompletionItem(label: string, desc: string): LSP.CompletionItem {
+  // [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
+  const compitem = LSP.CompletionItem.create(label);
+  compitem.detail = desc;
+  return compitem;
 }
 
 
