@@ -9,7 +9,7 @@ const defaultDbPath = `${__dirname}/../commandspecs.db`;
 // Memento is interface to sqlite3 database + cache as replacement to Memento in VS Code.
 export class Memento {
   private db: BetterSqlite3.Database;
-  private cache: Map<string, Command>;
+  private cache: {[name: string]: Command};
 
   constructor(path=defaultDbPath) {
     this.db = this.initializeDatabase(path);
@@ -35,14 +35,14 @@ export class Memento {
 
 
   public get = (name: string): Command | undefined => {
-    if (this.cache.has(name)) {
-      return this.cache.get(name);
+    if (name in this.cache) {
+      return this.cache[name];
     }
 
     const raw = this.db.prepare("select json from command where name=?").pluck().get(name);
     const cmd = (!!raw) ? JSON.parse(raw) : undefined;
     if (cmd) {
-      this.cache.set(name, cmd);
+      this.cache[name] = cmd;
     }
     return cmd;
   }
@@ -50,7 +50,7 @@ export class Memento {
 
   public remove = (name: string): void => {
     this.db.prepare("delete from command where name=?").run(name);
-    this.cache.delete(name);
+    delete this.cache[name];
     console.info(`Removed ${name} from the database.`)
   }
 
@@ -69,16 +69,16 @@ export class Memento {
       name: name,
       json: JSON.stringify(cmdSpec)
     });
-    this.cache.set(name, cmdSpec);
+    this.cache[name] = cmdSpec;
   }
 
 
-  public loadCommands = (): Map<string, Command> => {
-    const d = new Map<string, Command>();
+  public loadCommands = (): {[name: string]: Command} => {
+    const d: {[name: string]: Command} = {};
     const rawdata = this.db.prepare("select json from command").pluck().all();
     for (const raw of rawdata) {
       const cmd = JSON.parse(raw);
-      d.set(cmd.name, cmd);
+      d[cmd.name] = cmd;
     }
     return d;
   }
