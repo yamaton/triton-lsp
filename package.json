@@ -2,9 +2,9 @@
   "name": "triton-lsp",
   "version": "0.0.1",
   "description": "Language server for Triton notebook",
-  "main": "dist/main.js",
+  "main": "dist/src/server.js",
   "scripts": {
-    "start": "tsc && node dist/main.js",
+    "start": "tsc && node dist/src/server.js",
     "test": "mocha -r ts-node/register test/*.ts"
   },
   "repository": {
