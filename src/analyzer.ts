@@ -293,18 +293,19 @@ export default class Analyzer {
 
   // Completion provider
   public async provideCompletion(params: LSP.CompletionParams): Promise<LSP.CompletionItem[]> {
-    const document = this.documents[params.textDocument.uri];
+    const uri = params.textDocument.uri;
+    const document = this.documents[uri];
     const position = params.position;
 
     if (!this.parser) {
       console.error("[Completion] Parser is unavailable!");
       return Promise.reject("Parser unavailable!");
     }
-    if (!this.trees[document.uri.toString()]) {
-      console.log("[Completion] Creating tree");
-      this.trees[document.uri.toString()] = this.parser.parse(document.getText());
+    if (!this.trees[uri]) {
+      console.log("[Completion] Create tree due to cache absence.");
+      this.trees[uri] = this.parser.parse(document.getText());
     }
-    const tree = this.trees[document.uri.toString()];
+    const tree = this.trees[uri];
     const commandList = this.fetcher.getNames();
     let compCommands: LSP.CompletionItem[] = [];
     if (!!commandList) {
@@ -343,18 +344,19 @@ export default class Analyzer {
 
   // Hover provider
   public async provideHover(params: LSP.HoverParams): Promise<LSP.Hover> {
-    const document = this.documents[params.textDocument.uri];
+    const uri = params.textDocument.uri
+    const document = this.documents[uri];
     const position = params.position;
     if (!this.parser) {
       console.error("[Hover] Parser is unavailable!");
       return Promise.reject("Parser is unavailable!");
     }
 
-    if (!this.trees[document.uri.toString()]) {
+    if (!this.trees[uri]) {
       console.log("[Hover] Creating tree");
-      this.trees[document.uri.toString()] = this.parser.parse(document.getText());
+      this.trees[uri] = this.parser.parse(document.getText());
     }
-    const tree = this.trees[document.uri.toString()];
+    const tree = this.trees[uri];
 
     const currentWord = getCurrentNode(tree.rootNode, position).text;
     try {
@@ -394,6 +396,8 @@ export default class Analyzer {
       console.log("[Hover] Error: ", e);
       return Promise.reject("No hover is available");
     }
+
+    return Promise.reject(`[Hover] Something is wrong: ${params}`);
   }
 
 
