@@ -1,4 +1,4 @@
-import { Option } from "./command";
+import { Option } from "./types";
 import Parser from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
 import { TextDocument } from "vscode-languageserver-textdocument";

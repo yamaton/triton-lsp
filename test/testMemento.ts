@@ -1,6 +1,6 @@
 import chai from "chai";
 import { Memento } from "../src/memento";
-import { Command } from "../src/command";
+import { Command } from "../src/types";
 import fs from 'fs';
 
 const assert = chai.assert;

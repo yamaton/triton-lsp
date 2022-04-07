@@ -1,5 +1,5 @@
 
-import { Command } from './command';
+import { Command } from './types';
 import { Memento } from './memento';
 import { runH2o } from './h2o';
 import { HTTPResponseError } from './error';

@@ -2,7 +2,7 @@ import Parser from 'web-tree-sitter';
 import { SyntaxNode } from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Command, Option } from './command';
+import { Command, Option } from './types';
 import { CommandFetcher } from './commandFetcher';
 import { contains, asRange, translate, lineAt, asPoint, formatTldr, toHover, optsToMessage } from './utils';
 
