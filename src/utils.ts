@@ -1,19 +1,19 @@
 import { Option } from "./types";
 import Parser from 'web-tree-sitter';
-import LSP from 'vscode-languageserver/node';
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { Position } from "vscode-languageserver-types";
+import LSP from 'vscode-languageserver/node';
 
 
-
-// Convert: vscode.Position -> Parser.Point
-export function asPoint(p: LSP.Position): Parser.Point {
+// Convert: Position -> Parser.Point
+export function asPoint(p: Position): Parser.Point {
   return { row: p.line, column: p.character };
 }
 
 
-// Parser.Point -> LSP.Position
-function asPosition(p: Parser.Point): LSP.Position {
-  return LSP.Position.create(p.row, p.column);
+// Parser.Point -> Position
+export function asPosition(p: Parser.Point): Position {
+  return Position.create(p.row, p.column);
 }
 
 
@@ -33,35 +33,35 @@ export function lineAt(document: TextDocument, line: number): string {
 
 
 // This is consistent with vscode.Range.contains
-export function contains(range: LSP.Range, position: LSP.Position): boolean {
+export function contains(range: LSP.Range, position: Position): boolean {
   return isBeforeOrEqual(range.start, position) && isBeforeOrEqual(position, range.end);
 }
 
 // Position utils
-function isBefore(left: LSP.Position, right: LSP.Position) {
+function isBefore(left: Position, right: Position) {
   const cond1 = left.line < right.line;
   const cond2 = left.line === right.line && left.character < right.character;
   return cond1 || cond2;
 }
 
-function isEqual(left: LSP.Position, right: LSP.Position) {
+function isEqual(left: Position, right: Position) {
   return left.line === right.line && left.character === right.character;
 }
 
-function isBeforeOrEqual(left: LSP.Position, right: LSP.Position) {
+function isBeforeOrEqual(left: Position, right: Position) {
   return isBefore(left, right) || isEqual(left, right);
 }
 
-function isAfter(left: LSP.Position, right: LSP.Position) {
+function isAfter(left: Position, right: Position) {
   return isBefore(right, left);
 }
 
-function isAfterOrEqual(left: LSP.Position, right: LSP.Position) {
+function isAfterOrEqual(left: Position, right: Position) {
   return isBeforeOrEqual(right, left);
 }
 
-export function translate(position: LSP.Position, lineDelta: number, characterDelta: number): LSP.Position {
-  return LSP.Position.create(
+export function translate(position: Position, lineDelta: number, characterDelta: number): Position {
+  return Position.create(
     Math.max(0, position.line + lineDelta),
     Math.max(0, position.character + characterDelta),
   );
