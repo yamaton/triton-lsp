@@ -1,6 +1,5 @@
 import Parser from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import Analyzer from './analyzer';
 
 
@@ -15,16 +14,8 @@ async function initializeParser(): Promise<Parser> {
 
 
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
-const documents: LSP.TextDocuments<TextDocument> = new LSP.TextDocuments(TextDocument);
 // Initializ analyzer in conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
-
-
-documents.listen(connection);
-documents.onDidChangeContent((event: LSP.TextDocumentChangeEvent<TextDocument>) => {
-  analyzer.updateDocument(event.document);
-});
-
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -83,18 +74,20 @@ connection.onInitialized(() => {
 });
 
 
-documents.onDidClose((event) => {
-  analyzer.closeDocument(event.document.uri);
+connection.onDidOpenTextDocument((params: LSP.DidOpenTextDocumentParams) => {
+  analyzer.open(params);
 });
+
+
+connection.onDidCloseTextDocument((params: LSP.DidCloseTextDocumentParams) => {
+  analyzer.close(params);
+});
+
 
 connection.onDidChangeTextDocument((params: LSP.DidChangeTextDocumentParams) => {
-  analyzer.updateTree(params);
+  analyzer.update(params);
 });
 
-
-documents.onDidChangeContent((event: LSP.TextDocumentChangeEvent<TextDocument>) => {
-  analyzer.recreateTree(event);
-});
 
 connection.onCompletion((params: LSP.CompletionParams) => analyzer.provideCompletion(params));
 connection.onHover((params: LSP.HoverParams) => analyzer.provideHover(params));

@@ -8,7 +8,7 @@ import { contains, asRange, translate, lineAt, asPoint, formatTldr, toHover, opt
 
 
 type Trees = { [uri: string]: Parser.Tree };
-type TextDocuments = { [uri: string]: TextDocument };
+type MyTextDocuments = { [uri: string]: TextDocument };
 
 
 function getCurrentNode(n: Parser.SyntaxNode, position: LSP.Position): Parser.SyntaxNode {
@@ -229,7 +229,6 @@ function getSubcommandsWithAliases(cmd: Command): Command[] {
 // get Parser.Edit from Event
 type Event = {
   range: LSP.Range;
-  rangeLength?: number | undefined;
   text: string;
 };
 
@@ -252,7 +251,7 @@ function getDelta(e: Event, text: TextDocument): Parser.Edit {
 //
 export default class Analyzer {
   private trees: Trees;
-  private documents: TextDocuments;
+  private documents: MyTextDocuments;
   private parser: Parser;
   private fetcher: CommandFetcher;
 
@@ -263,31 +262,50 @@ export default class Analyzer {
     this.parser = parser;
   }
 
-  public updateTree(params: LSP.DidChangeTextDocumentParams): void {
+
+  // Update both `this.trees` and `this.documents`
+  public update(params: LSP.DidChangeTextDocumentParams): void {
     const uri = params.textDocument.uri;
-    const old = this.trees[uri];
+    const oldTree = this.trees[uri];
     const oldDoc = this.documents[uri];
     const edits: LSP.TextEdit[] = [];
 
     for (const e of params.contentChanges) {
       if (LSP.TextDocumentContentChangeEvent.isIncremental(e)) {
         const delta = getDelta(e, oldDoc);
-        old.edit(delta);
+        oldTree.edit(delta);
         edits.push({ range: e.range, newText: e.text });
       }
-      const newContent = TextDocument.applyEdits(oldDoc, edits);
-      const t = this.parser.parse(newContent, old);
-      this.trees[uri] = t;
     }
+    const newContent = TextDocument.applyEdits(oldDoc, edits);
+    this.trees[uri] = this.parser.parse(newContent, oldTree);
+
+    this._updateDoc(oldDoc, newContent);
   }
 
-  public recreateTree(edit: LSP.TextDocumentChangeEvent<TextDocument>): void {
-    this.trees[edit.document.uri.toString()] = this.parser.parse(edit.document.getText());
+
+  _updateDoc(oldDoc: TextDocument, newContent: string):void {
+    const uri = oldDoc.uri;
+    const newDoc = TextDocument.create(oldDoc.uri, oldDoc.languageId, oldDoc.version, newContent);
+    this.documents[uri] = newDoc;
   }
 
-  public closeDocument(uri: LSP.DocumentUri): void {
+
+  public open(params: LSP.DidOpenTextDocumentParams): void {
+    const td = params.textDocument;
+    const uri = td.uri;
+    const tree = this.parser.parse(td.text);
+    const doc = TextDocument.create(td.uri, td.languageId, td.version, td.text);
+    this.trees[uri] = tree;
+    this.documents[uri] = doc;
+  }
+
+
+  public close(params: LSP.DidCloseTextDocumentParams): void {
+    const uri = params.textDocument.uri;
     console.log(`[Analyzer] removing a parse tree: ${uri}`);
     delete this.trees[uri];
+    delete this.documents[uri];
   }
 
 
@@ -398,11 +416,6 @@ export default class Analyzer {
     }
 
     return Promise.reject(`[Hover] Something is wrong: ${params}`);
-  }
-
-
-  public updateDocument(doc: TextDocument): void {
-    this.documents[doc.uri] = doc;
   }
 
 
