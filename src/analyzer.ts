@@ -11,6 +11,16 @@ type Trees = { [uri: string]: Parser.Tree };
 type MyTextDocuments = { [uri: string]: TextDocument };
 
 
+async function initializeParser(): Promise<Parser> {
+  await Parser.init();
+  const parser = new Parser();
+  const path = `${__dirname}/../tree-sitter-bash.wasm`;
+  const lang = await Parser.Language.load(path);
+  parser.setLanguage(lang);
+  return parser;
+}
+
+
 function getCurrentNode(n: Parser.SyntaxNode, position: LSP.Position): Parser.SyntaxNode {
   if (!(contains(asRange(n), position))) {
     console.error("Out of range!");
@@ -254,6 +264,12 @@ export default class Analyzer {
   private documents: MyTextDocuments;
   private parser: Parser;
   private fetcher: CommandFetcher;
+
+  static async initialize() {
+    const parser = await initializeParser();
+    return new Analyzer(parser);
+  }
+
 
   constructor(parser: Parser) {
     this.trees = {};

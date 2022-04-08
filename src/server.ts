@@ -3,16 +3,6 @@ import LSP from 'vscode-languageserver/node';
 import Analyzer from './analyzer';
 
 
-async function initializeParser(): Promise<Parser> {
-  await Parser.init();
-  const parser = new Parser();
-  const path = `${__dirname}/../tree-sitter-bash.wasm`;
-  const lang = await Parser.Language.load(path);
-  parser.setLanguage(lang);
-  return parser;
-}
-
-
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
@@ -22,8 +12,7 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize(async (params: LSP.InitializeParams) => {
-  const parser = await initializeParser();
-  analyzer = new Analyzer(parser);  // Initialize here to resolve the promise of initializeParser()
+  analyzer = await Analyzer.initialize();  // Initialize here to resolve the promise of initializeParser()
 
   const capabilities = params.capabilities;
 
