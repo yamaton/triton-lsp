@@ -59,7 +59,7 @@ function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: LS
 
 
 // Returns current word as an option if the tree-sitter says so
-function getMatchingOption(currentWord: string, name: string, cmdSeq: Command[]): Option[] {
+function getMatchingOption(currentWord: string, cmdSeq: Command[]): Option[] {
   const thisName = currentWord.split('=', 2)[0];
   if (thisName.startsWith('-')) {
     const options = getOptions(cmdSeq);
@@ -132,8 +132,6 @@ function _getSubcommandCandidates(root: SyntaxNode, position: LSP.Position): str
   }
   return candidates;
 }
-
-
 
 
 // Get command arguments as string[]
@@ -236,13 +234,13 @@ function getSubcommandsWithAliases(cmd: Command): Command[] {
 }
 
 
-// get Parser.Edit from Event
-type Event = {
+// get Parser.Edit from TextDocumentContentChangeEvent
+type ContentChangeEvent = {
   range: LSP.Range;
   text: string;
 };
 
-function getDelta(e: Event, text: TextDocument): Parser.Edit {
+function getDelta(e: ContentChangeEvent, text: TextDocument): Parser.Edit {
   const startIndex = text.offsetAt(e.range.start);
   const oldEndIndex = text.offsetAt(e.range.end);
   const newEndIndex = startIndex + e.text.length;
@@ -258,7 +256,10 @@ function getDelta(e: Event, text: TextDocument): Parser.Edit {
 
 
 //----------------------------------------------------
-//
+//       Analyzer
+//----------------------------------------------------
+
+// Provide completion and hover
 export default class Analyzer {
   private trees: Trees;
   private documents: MyTextDocuments;
@@ -320,6 +321,13 @@ export default class Analyzer {
   public close(params: LSP.DidCloseTextDocumentParams): void {
     const uri = params.textDocument.uri;
     console.log(`[Analyzer] removing a parse tree: ${uri}`);
+    if (!(uri in this.trees)) {
+      console.error(`[Analyzer] ${uri} is absent in this.trees`);
+    }
+    if (!(uri in this.documents)) {
+      console.error(`[Analyzer] ${uri} is absent in this.documents`);
+    }
+
     delete this.trees[uri];
     delete this.documents[uri];
   }
@@ -419,7 +427,7 @@ export default class Analyzer {
           return toHover(msg);
 
         } else if (cmdSeq.length) {
-          const opts = getMatchingOption(currentWord, name, cmdSeq);
+          const opts = getMatchingOption(currentWord, cmdSeq);
           const msg = optsToMessage(opts);
           return toHover(msg);
         } else {
