@@ -14,7 +14,7 @@ async function initializeParser(): Promise<Parser> {
 
 
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
-// Initializ analyzer in conneciton.onInitialize() to resolve a promise
+// analyzer is initialized within conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
 
 let hasConfigurationCapability = false;
@@ -44,12 +44,15 @@ connection.onInitialize(async (params: LSP.InitializeParams) => {
   const result: LSP.InitializeResult = {
     capabilities: {
       textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
-      // Tell the client that this server supports code completion.
+
       completionProvider: {
-        resolveProvider: true
-      }
+        resolveProvider: true,
+        triggerCharacters: [' '],
+      },
+      hoverProvider: true,
     }
   };
+
   if (hasWorkspaceFolderCapability) {
     result.capabilities.workspace = {
       workspaceFolders: {
