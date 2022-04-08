@@ -40,12 +40,12 @@ export function contains(range: LSP.Range, position: LSP.Position): boolean {
 // Position utils
 function isBefore(left: LSP.Position, right: LSP.Position) {
   const cond1 = left.line < right.line;
-  const cond2 = left.line == right.line && left.character < right.character;
+  const cond2 = left.line === right.line && left.character < right.character;
   return cond1 || cond2;
 }
 
 function isEqual(left: LSP.Position, right: LSP.Position) {
-  return left.line == right.line && left.character == right.character;
+  return left.line === right.line && left.character === right.character;
 }
 
 function isBeforeOrEqual(left: LSP.Position, right: LSP.Position) {
