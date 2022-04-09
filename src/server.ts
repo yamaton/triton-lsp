@@ -1,4 +1,3 @@
-import Parser from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
 import Analyzer from './analyzer';
 
