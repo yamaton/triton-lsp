@@ -37,8 +37,12 @@ describe('Memento I/O', () => {
     assert.deepEqual(memento.getNames(), []);
   });
 
-  it('Memento remembers what\'s given', () => {
+  it('Set Memento a command', (done) => {
     memento.set(acommand.name, acommand);
+    done();
+  });
+
+  it('Memento remembers what\'s given', () => {
     const cmd = memento.get(acommand.name);
     assert.deepEqual(acommand, cmd);
   });
@@ -48,7 +52,7 @@ describe('Memento I/O', () => {
     const updatedCmd: Command = { ...acommand, description: newDesc };
     memento.set(acommand.name, updatedCmd);
     const cmd2 = memento.get(updatedCmd.name);
-    assert.equal(cmd2?.description, newDesc);
+    assert.strictEqual(cmd2?.description, newDesc);
     assert.deepEqual(cmd2, updatedCmd);
   });
 

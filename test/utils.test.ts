@@ -34,7 +34,7 @@ describe('Utils: Misc', () => {
     const content = "abyss\n  - nanachi\n  - riko\n  - regu"
     const doc = TextDocument.create('baba', 'typescript', 2, content);
     const line = lineAt(doc, 1);
-    assert.equal(line, "  - nanachi\n");
+    assert.strictEqual(line, "  - nanachi\n");
   });
 
   it('contains 0', () => {
