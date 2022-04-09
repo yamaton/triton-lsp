@@ -33,7 +33,7 @@ export default class CommandFetcher {
   }
 
   // Get d data of the command `name`
-  private _get(name: string): Command | undefined {
+  private getCache(name: string): Command | undefined {
     return this.memento.get(name);
   }
 
@@ -61,7 +61,7 @@ export default class CommandFetcher {
       return Promise.reject(`Command name too short: ${name}`);
     }
 
-    let cached = this._get(name);
+    let cached = this.getCache(name);
     if (cached) {
       console.log('[CommandFetcher.fetch] Fetching from cache: ', name);
       return cached;
@@ -129,7 +129,7 @@ export default class CommandFetcher {
     console.log("[CommandFetcher.fetchAllCurated] Done inflating and parsing. Command #: ", commands.length);
 
     for (const cmd of commands) {
-      if (isForcing || this._get(cmd.name) === undefined) {
+      if (isForcing || this.getCache(cmd.name) === undefined) {
         console.log(`[fetchAllCurated] Loading: ${cmd.name}`);
         this.update(cmd.name, cmd);
       }
