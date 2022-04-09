@@ -5,13 +5,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
 import { Command, Option } from './types';
 import { CommandFetcher } from './commandFetcher';
-import { contains, asRange, translate, lineAt, asPoint, formatTldr, toHover, optsToMessage } from './utils';
+import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage } from './utils';
 
 
 type Trees = { [uri: string]: Parser.Tree };
 type MyTextDocuments = { [uri: string]: TextDocument };
 
 
+// Create and initalize Parser object
 async function initializeParser(): Promise<Parser> {
   await Parser.init();
   const parser = new Parser();
@@ -22,6 +23,7 @@ async function initializeParser(): Promise<Parser> {
 }
 
 
+// Get the deepest node covering `position`
 function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.SyntaxNode {
   if (!(contains(asRange(n), position))) {
     console.error("Out of range!");
@@ -34,7 +36,6 @@ function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.Syntax
   }
   return n;
 }
-
 
 
 // Moves the position left by one character IF position is contained only in the root-node range.
@@ -82,18 +83,24 @@ function getMatchingOption(currentWord: string, cmdSeq: Command[]): Option[] {
   return [];
 }
 
-function isNotOldStyle(name: string): boolean {
+
+function _isNotOldStyle(name: string): boolean {
   return name.startsWith('--') || name.length === 2;
 }
 
+
+// check if string is old style like '-option arg'
 function isOldStyle(name: string): boolean {
-  return !isNotOldStyle(name);
+  return name.startsWith('-') && !_isNotOldStyle(name);
 }
 
+
+// unstackOption('-xvf') == ['-x', '-v', '-f']
 function unstackOption(name: string): string[] {
   const xs = name.substring(1).split('').map(c => c.padStart(2, '-'));
   return [...new Set(xs)];
 }
+
 
 // Get command node inferred from the current position
 function _getContextCommandNode(root: SyntaxNode, position: Position): SyntaxNode | undefined {
@@ -106,6 +113,7 @@ function _getContextCommandNode(root: SyntaxNode, position: Position): SyntaxNod
   }
 }
 
+
 // Get command name covering the position if exists
 function getContextCommandName(root: SyntaxNode, position: Position): string | undefined {
   // if you are at a command, a named node, the currentNode becomes one-layer deeper than other nameless nodes.
@@ -116,6 +124,7 @@ function getContextCommandName(root: SyntaxNode, position: Position): string | u
   }
   return name;
 }
+
 
 // Get subcommand names NOT starting with `-`
 // [FIXME] this catches option's argument; use database instead
@@ -161,7 +170,7 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
   const subcommands = getSubcommandsWithAliases(deepestCmd);
   if (subcommands && subcommands.length) {
     const compitems = subcommands.map((sub, idx) => {
-      const item = createCompletionItem(sub.name, sub.description);
+      const item = asCompletionItem(sub.name, sub.description);
       item.sortText = `33-${idx.toString().padStart(4)}`;
       return item;
     });
@@ -180,7 +189,7 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
     // suppress already-used options
     if (opt.names.every(name => !args.includes(name))) {
       opt.names.forEach(name => {
-        const item = createCompletionItem(name, opt.description);
+        const item = asCompletionItem(name, opt.description);
         item.sortText = `55-${idx.toString().padStart(4)}`;
         if (opt.argument) {
           const snippet = `${name} \$\{1:${opt.argument}\}`;
@@ -195,8 +204,9 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
 }
 
 
-function createCompletionItem(label: string, desc: string): CompletionItem {
-  // [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
+// To CompletionItem
+// [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
+function asCompletionItem(label: string, desc: string): CompletionItem {
   const compitem = CompletionItem.create(label);
   compitem.detail = desc;
   return compitem;
@@ -302,7 +312,7 @@ export default class Analyzer {
   }
 
 
-  _updateDoc(oldDoc: TextDocument, newContent: string):void {
+  _updateDoc(oldDoc: TextDocument, newContent: string): void {
     const uri = oldDoc.uri;
     const newDoc = TextDocument.create(oldDoc.uri, oldDoc.languageId, oldDoc.version, newContent);
     this.documents[uri] = newDoc;
@@ -411,7 +421,7 @@ export default class Analyzer {
           const tldrText = (!!thisCmd.tldr) ? "\n" + formatTldr(thisCmd.tldr) : "";
           const msg = `\`${name}\`` + tldrText;
           // msg.isTrusted = true;      // [FIXME] Need this property in LSP
-          return toHover(msg);
+          return asHover(msg);
 
         } else if (cmdSeq.length > 1 && cmdSeq.some((cmd) => cmd.name === currentWord)) {
           const thatCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
@@ -425,12 +435,12 @@ export default class Analyzer {
           }
           const cmdPrefixName = nameSeq.join(" ");
           const msg = `${cmdPrefixName} **${thatCmd.name}**\n\n ${thatCmd.description}`;
-          return toHover(msg);
+          return asHover(msg);
 
         } else if (cmdSeq.length) {
           const opts = getMatchingOption(currentWord, cmdSeq);
           const msg = optsToMessage(opts);
-          return toHover(msg);
+          return asHover(msg);
         } else {
           return Promise.reject(`No hover is available for ${currentWord}`);
         }

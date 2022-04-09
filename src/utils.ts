@@ -26,12 +26,13 @@ export function asRange(n: Parser.SyntaxNode): Range {
 }
 
 
+// Reproduce vscode.TextDocument.lineAt()
 export function lineAt(document: TextDocument, line: uinteger): string {
   return document.getText(Range.create(line, 0, line, uinteger.MAX_VALUE));
 }
 
 
-// This is consistent with vscode.Range.contains
+// Reproduce vscode.Range.contains()
 export function contains(range: Range, position: Position): boolean {
   return isBeforeOrEqual(range.start, position) && isBeforeOrEqual(position, range.end);
 }
@@ -59,6 +60,8 @@ function isAfterOrEqual(left: Position, right: Position) {
   return isBeforeOrEqual(right, left);
 }
 
+
+// Repoduce vscode.Position.translate()
 export function translate(position: Position, lineDelta: integer, characterDelta: integer): Position {
   return Position.create(
     Math.min(Math.max(0, position.line + lineDelta), integer.MAX_VALUE),
@@ -105,7 +108,7 @@ function markup(value: string): MarkupContent {
 
 
 // string -> Hover
-export function toHover(value: string): Hover {
+export function asHover(value: string): Hover {
   const msg = markup(value);
   const res: Hover = {
     contents: msg
