@@ -10,11 +10,15 @@ import pako from 'pako';
 // -----
 // CommandFetcher manages the local cache using Memento.
 // It also pulls command data from the remote repository.
-export class CommandFetcher {
+export default class CommandFetcher {
   private memento: Memento;
 
-  constructor() {
-    this.memento = new Memento();
+  constructor(path: string | undefined = undefined) {
+    if (!path) {
+      this.memento = new Memento();
+    } else {
+      this.memento = new Memento(path);
+    }
     const existing = this.getNames();
     const msg = (!existing.length || existing.length === 0)
       ? `
