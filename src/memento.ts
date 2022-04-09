@@ -12,11 +12,11 @@ export class Memento {
   private cache: {[name: string]: Command};
 
   constructor(path=defaultDbPath) {
-    this.db = this.initializeDatabase(path);
+    this.db = Memento.initializeDatabase(path);
     this.cache = this.loadCommands();
   }
 
-  private initializeDatabase(path: string): BetterSqlite3.Database {
+  static initializeDatabase(path: string): BetterSqlite3.Database {
     let db: BetterSqlite3.Database;
     if (fs.existsSync(path)) {
       db = Database(path);
@@ -81,6 +81,11 @@ export class Memento {
       d[cmd.name] = cmd;
     }
     return d;
+  }
+
+  public close = (): void => {
+    this.db.close();
+    this.cache = {};
   }
 
 }

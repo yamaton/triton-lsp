@@ -230,5 +230,11 @@ export default class CommandFetcher {
     return this.memento.getNames();
   }
 
+
+  // Close DB
+  public close(): void {
+    this.memento.close();
+  }
+
 }
 

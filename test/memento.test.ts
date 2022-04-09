@@ -51,5 +51,10 @@ describe('Memento I/O', () => {
     assert.equal(cmd2?.description, newDesc);
     assert.deepEqual(cmd2, updatedCmd);
   });
+
+  after(() => {
+    memento.close();
+    fs.rmSync(testDbPath);
+  });
 });
 
