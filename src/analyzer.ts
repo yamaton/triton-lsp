@@ -308,12 +308,6 @@ export default class Analyzer {
     const newContent = TextDocument.applyEdits(oldDoc, edits);
     this.trees[uri] = this.parser.parse(newContent, oldTree);
 
-    this._updateDoc(oldDoc, newContent);
-  }
-
-
-  _updateDoc(oldDoc: TextDocument, newContent: string): void {
-    const uri = oldDoc.uri;
     const newDoc = TextDocument.create(oldDoc.uri, oldDoc.languageId, oldDoc.version, newContent);
     this.documents[uri] = newDoc;
   }
@@ -391,7 +385,6 @@ export default class Analyzer {
       console.warn("[Completion] No completion item is available (1)", e);
       return Promise.reject("Error: No completion item is available");
     }
-    return [];
   }
 
 
@@ -444,13 +437,13 @@ export default class Analyzer {
         } else {
           return Promise.reject(`No hover is available for ${currentWord}`);
         }
+      } else {
+        return Promise.reject(`[Hover] No command found.`);
       }
     } catch (e) {
       console.log("[Hover] Error: ", e);
       return Promise.reject("No hover is available");
     }
-
-    return Promise.reject(`[Hover] Something is wrong: ${params}`);
   }
 
 
