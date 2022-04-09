@@ -100,6 +100,8 @@ export default class CommandFetcher {
       }
     };
 
+    const t0 = new Date();
+
     let response: Response;
     try {
       response = await fetch(url);
@@ -117,6 +119,11 @@ export default class CommandFetcher {
     }
     console.log("[CommandFetcher.fetchAllCurated] received HTTP response");
 
+    const t1 = new Date();
+    const diffDownload = t1.getTime() - t0.getTime();
+    console.log(`[CommandFetcher.fetchAllCurated] (${kind}) Download took ${diffDownload} ms.`);
+
+
     let commands: Command[] = [];
     try {
       const s = await response.buffer();
@@ -126,11 +133,14 @@ export default class CommandFetcher {
       console.error("[fetchAllCurated] Error: ", err);
       return Promise.reject("Failed to inflate and parse the content as JSON.");
     }
-    console.log("[CommandFetcher.fetchAllCurated] Done inflating and parsing. Command #: ", commands.length);
+
+    const t2 = new Date();
+    const diffUnpacking = t2.getTime() - t1.getTime();
+    console.log(`[CommandFetcher.fetchAllCurated] (${kind}) Unpack took ${diffUnpacking} ms.`);
+    console.log("[CommandFetcher.fetchAllCurated] Done inflating and parsing. # of Commands = ", commands.length);
 
     for (const cmd of commands) {
       if (isForcing || this.getCache(cmd.name) === undefined) {
-        console.log(`[fetchAllCurated] Loading: ${cmd.name}`);
         this.update(cmd.name, cmd);
       }
     }
