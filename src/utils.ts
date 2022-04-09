@@ -1,7 +1,7 @@
 import { Option } from "./types";
 import Parser from 'web-tree-sitter';
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { Position } from "vscode-languageserver-types";
+import { Position, Range, Hover, integer } from "vscode-languageserver-types";
 import LSP from 'vscode-languageserver/node';
 
 
@@ -17,9 +17,9 @@ export function asPosition(p: Parser.Point): Position {
 }
 
 
-// Parser.SyntaxNode -> LSP.Range
-export function asRange(n: Parser.SyntaxNode): LSP.Range {
-  const r = LSP.Range.create(
+// Parser.SyntaxNode -> Range
+export function asRange(n: Parser.SyntaxNode): Range {
+  const r = Range.create(
     asPosition(n.startPosition),
     asPosition(n.endPosition)
   );
@@ -27,13 +27,13 @@ export function asRange(n: Parser.SyntaxNode): LSP.Range {
 }
 
 
-export function lineAt(document: TextDocument, line: number): string {
-  return document.getText(LSP.Range.create(line, -1, line, Number.MAX_VALUE));
+export function lineAt(document: TextDocument, line: integer): string {
+  return document.getText(Range.create(line, 0, line, integer.MAX_VALUE));
 }
 
 
 // This is consistent with vscode.Range.contains
-export function contains(range: LSP.Range, position: Position): boolean {
+export function contains(range: Range, position: Position): boolean {
   return isBeforeOrEqual(range.start, position) && isBeforeOrEqual(position, range.end);
 }
 
@@ -60,7 +60,7 @@ function isAfterOrEqual(left: Position, right: Position) {
   return isBeforeOrEqual(right, left);
 }
 
-export function translate(position: Position, lineDelta: number, characterDelta: number): Position {
+export function translate(position: Position, lineDelta: integer, characterDelta: integer): Position {
   return Position.create(
     Math.max(0, position.line + lineDelta),
     Math.max(0, position.character + characterDelta),
@@ -106,10 +106,10 @@ function markup(value: string): LSP.MarkupContent {
 };
 
 
-// string -> LSP.Hover
-export function toHover(value: string): LSP.Hover {
+// string -> Hover
+export function toHover(value: string): Hover {
   const msg = markup(value);
-  const res: LSP.Hover = {
+  const res: Hover = {
     contents: msg
   };
   return res;
