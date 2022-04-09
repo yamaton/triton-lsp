@@ -1,8 +1,7 @@
 import { Option } from "./types";
 import Parser from 'web-tree-sitter';
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { Position, Range, Hover, integer } from "vscode-languageserver-types";
-import LSP from 'vscode-languageserver/node';
+import { Position, Range, Hover, integer, MarkupContent, MarkupKind } from "vscode-languageserver-types";
 
 
 // Convert: Position -> Parser.Point
@@ -95,10 +94,10 @@ export function optsToMessage(opts: Option[]): string {
 }
 
 
-// string -> LSP.MarkupContent
-function markup(value: string): LSP.MarkupContent {
-  const res: LSP.MarkupContent = {
-    kind: LSP.MarkupKind.Markdown,
+// string -> MarkupContent
+function markup(value: string): MarkupContent {
+  const res: MarkupContent = {
+    kind: MarkupKind.Markdown,
     value: value,
   };
   return res;

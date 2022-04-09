@@ -2,6 +2,7 @@ import Parser from 'web-tree-sitter';
 import { SyntaxNode } from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
 import { Command, Option } from './types';
 import { CommandFetcher } from './commandFetcher';
 import { contains, asRange, translate, lineAt, asPoint, formatTldr, toHover, optsToMessage } from './utils';
@@ -21,7 +22,7 @@ async function initializeParser(): Promise<Parser> {
 }
 
 
-function getCurrentNode(n: Parser.SyntaxNode, position: LSP.Position): Parser.SyntaxNode {
+function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.SyntaxNode {
   if (!(contains(asRange(n), position))) {
     console.error("Out of range!");
   }
@@ -40,7 +41,7 @@ function getCurrentNode(n: Parser.SyntaxNode, position: LSP.Position): Parser.Sy
 // This is just a workround as you cannot reach command node if you start from
 // the position, say, after 'echo '
 // [FIXME] Do not rely on such an ugly hack
-function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: LSP.Position): LSP.Position {
+function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Position): Position {
   const thisNode = getCurrentNode(root, position);
   console.debug("[walkbackIfNeeded] thisNode.type: ", thisNode.type);
   if (position.character > 0 && thisNode.type !== 'word') {
@@ -51,7 +52,7 @@ function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: LS
     const prevLine = lineAt(document, prevLineIndex);
     if (prevLine.trimEnd().endsWith('\\')) {
       const charIndex = prevLine.trimEnd().length - 1;
-      return walkbackIfNeeded(document, root, LSP.Position.create(prevLineIndex, charIndex));
+      return walkbackIfNeeded(document, root, Position.create(prevLineIndex, charIndex));
     }
   }
   return position;
@@ -95,7 +96,7 @@ function unstackOption(name: string): string[] {
 }
 
 // Get command node inferred from the current position
-function _getContextCommandNode(root: SyntaxNode, position: LSP.Position): SyntaxNode | undefined {
+function _getContextCommandNode(root: SyntaxNode, position: Position): SyntaxNode | undefined {
   let currentNode = getCurrentNode(root, position);
   if (currentNode.parent?.type === 'command_name') {
     currentNode = currentNode.parent;
@@ -106,7 +107,7 @@ function _getContextCommandNode(root: SyntaxNode, position: LSP.Position): Synta
 }
 
 // Get command name covering the position if exists
-function getContextCommandName(root: SyntaxNode, position: LSP.Position): string | undefined {
+function getContextCommandName(root: SyntaxNode, position: Position): string | undefined {
   // if you are at a command, a named node, the currentNode becomes one-layer deeper than other nameless nodes.
   const commandNode = _getContextCommandNode(root, position);
   let name = commandNode?.firstNamedChild?.text!;
@@ -118,7 +119,7 @@ function getContextCommandName(root: SyntaxNode, position: LSP.Position): string
 
 // Get subcommand names NOT starting with `-`
 // [FIXME] this catches option's argument; use database instead
-function _getSubcommandCandidates(root: SyntaxNode, position: LSP.Position): string[] {
+function _getSubcommandCandidates(root: SyntaxNode, position: Position): string[] {
   const candidates: string[] = [];
   let commandNode = _getContextCommandNode(root, position)!;
   if (commandNode) {
@@ -135,7 +136,7 @@ function _getSubcommandCandidates(root: SyntaxNode, position: LSP.Position): str
 
 
 // Get command arguments as string[]
-function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: LSP.Position): string[] {
+function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position): string[] {
   const p = walkbackIfNeeded(document, root, position);
   let node = _getContextCommandNode(root, p)?.firstNamedChild;
   if (node?.text === 'sudo') {
@@ -156,7 +157,7 @@ function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: L
 
 
 // Get subcommand completions
-function getCompletionsSubcommands(deepestCmd: Command): LSP.CompletionItem[] {
+function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
   const subcommands = getSubcommandsWithAliases(deepestCmd);
   if (subcommands && subcommands.length) {
     const compitems = subcommands.map((sub, idx) => {
@@ -171,9 +172,9 @@ function getCompletionsSubcommands(deepestCmd: Command): LSP.CompletionItem[] {
 
 
 // Get option completion
-function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: LSP.Position, cmdSeq: Command[]): LSP.CompletionItem[] {
+function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[]): CompletionItem[] {
   const args = getContextCmdArgs(document, root, position);
-  const compitems: LSP.CompletionItem[] = [];
+  const compitems: CompletionItem[] = [];
   const options = getOptions(cmdSeq);
   options.forEach((opt, idx) => {
     // suppress already-used options
@@ -194,9 +195,9 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
 }
 
 
-function createCompletionItem(label: string, desc: string): LSP.CompletionItem {
+function createCompletionItem(label: string, desc: string): CompletionItem {
   // [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
-  const compitem = LSP.CompletionItem.create(label);
+  const compitem = CompletionItem.create(label);
   compitem.detail = desc;
   return compitem;
 }
@@ -236,7 +237,7 @@ function getSubcommandsWithAliases(cmd: Command): Command[] {
 
 // get Parser.Edit from TextDocumentContentChangeEvent
 type ContentChangeEvent = {
-  range: LSP.Range;
+  range: Range;
   text: string;
 };
 
@@ -285,7 +286,7 @@ export default class Analyzer {
     const uri = params.textDocument.uri;
     const oldTree = this.trees[uri];
     const oldDoc = this.documents[uri];
-    const edits: LSP.TextEdit[] = [];
+    const edits: TextEdit[] = [];
 
     for (const e of params.contentChanges) {
       if (LSP.TextDocumentContentChangeEvent.isIncremental(e)) {
@@ -334,7 +335,7 @@ export default class Analyzer {
 
 
   // Completion provider
-  public async provideCompletion(params: LSP.CompletionParams): Promise<LSP.CompletionItem[]> {
+  public async provideCompletion(params: LSP.CompletionParams): Promise<CompletionItem[]> {
     const uri = params.textDocument.uri;
     const document = this.documents[uri];
     const position = params.position;
@@ -349,9 +350,9 @@ export default class Analyzer {
     }
     const tree = this.trees[uri];
     const commandList = this.fetcher.getNames();
-    let compCommands: LSP.CompletionItem[] = [];
+    let compCommands: CompletionItem[] = [];
     if (!!commandList) {
-      compCommands = commandList.map((s) => LSP.CompletionItem.create(s));
+      compCommands = commandList.map((s) => CompletionItem.create(s));
     }
 
     // this is an ugly hack to get current Node
@@ -385,7 +386,7 @@ export default class Analyzer {
 
 
   // Hover provider
-  public async provideHover(params: LSP.HoverParams): Promise<LSP.Hover> {
+  public async provideHover(params: LSP.HoverParams): Promise<Hover> {
     const uri = params.textDocument.uri
     const document = this.documents[uri];
     const position = params.position;
@@ -444,7 +445,7 @@ export default class Analyzer {
 
 
   // Get command and subcommand inferred from the current position
-  async getContextCmdSeq(root: SyntaxNode, position: LSP.Position): Promise<Command[]> {
+  async getContextCmdSeq(root: SyntaxNode, position: Position): Promise<Command[]> {
     let name = getContextCommandName(root, position);
     if (!name) {
       return Promise.reject("[getContextCmdSeq] Command name not found.");
