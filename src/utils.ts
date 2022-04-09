@@ -62,11 +62,10 @@ function isAfterOrEqual(left: Position, right: Position) {
 
 export function translate(position: Position, lineDelta: integer, characterDelta: integer): Position {
   return Position.create(
-    Math.max(0, position.line + lineDelta),
-    Math.max(0, position.character + characterDelta),
+    Math.min(Math.max(0, position.line + lineDelta), integer.MAX_VALUE),
+    Math.min(Math.max(0, position.character + characterDelta), integer.MAX_VALUE),
   );
 }
-
 
 
 // Format tldr pages by cleaning tldr-specific notations {{path/to/file}}
