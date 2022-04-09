@@ -1,7 +1,7 @@
 import { Option } from "./types";
 import Parser from 'web-tree-sitter';
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { Position, Range, Hover, integer, MarkupContent, MarkupKind } from "vscode-languageserver-types";
+import { Position, Range, Hover, uinteger, integer, MarkupContent, MarkupKind } from "vscode-languageserver-types";
 
 
 // Convert: Position -> Parser.Point
@@ -26,8 +26,8 @@ export function asRange(n: Parser.SyntaxNode): Range {
 }
 
 
-export function lineAt(document: TextDocument, line: integer): string {
-  return document.getText(Range.create(line, 0, line, integer.MAX_VALUE));
+export function lineAt(document: TextDocument, line: uinteger): string {
+  return document.getText(Range.create(line, 0, line, uinteger.MAX_VALUE));
 }
 
 

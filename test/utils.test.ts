@@ -1,6 +1,6 @@
 import chai from "chai";
 import Parser from 'web-tree-sitter';
-import { Position, Range, integer } from 'vscode-languageserver-types'
+import { Position, Range, uinteger, integer } from 'vscode-languageserver-types'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { asPoint, asPosition, lineAt, contains, translate } from "../src/utils";
 
@@ -49,7 +49,7 @@ describe('Utils: Misc', () => {
     const end = Position.create(3, 3);
     const range = Range.create(start, end);
     const p1 = Position.create(1, 1000);
-    const p2 = Position.create(2, integer.MAX_VALUE);
+    const p2 = Position.create(2, uinteger.MAX_VALUE);
     const p3 = Position.create(2, 0);
     const p4 = Position.create(3, 1);
     const points = [p1, p2, p3, p4];
@@ -74,7 +74,7 @@ describe('Utils: Misc', () => {
 
   it('translate 1', () => {
     const p = Position.create(1, 5);
-    const expected = Position.create(3, integer.MAX_VALUE);
+    const expected = Position.create(3, uinteger.MAX_VALUE);
     assert.deepEqual(expected, translate(p, 2, integer.MAX_VALUE));
   });
 
