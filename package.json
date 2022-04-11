@@ -2,7 +2,6 @@
   "name": "triton-lsp",
   "version": "0.0.1",
   "description": "Language server for Triton notebook",
-  "main": "out/server.js",
   "scripts": {
     "start": "tsc && node out/server.js",
     "test": "mocha --require ts-node/register test/**/*.ts"
@@ -20,6 +19,12 @@
     "url": "https://github.com/yamaton/triton-lsp/issues"
   },
   "homepage": "https://github.com/yamaton/triton-lsp#readme",
+  "engines": {
+    "node": "*"
+  },
+  "bin": {
+    "triton-lsp": "./bin/main.js"
+  },
   "dependencies": {
     "better-sqlite3": "^7.5.0",
     "node-fetch": "^2.6.7",
