@@ -1,9 +1,9 @@
 import Parser from 'web-tree-sitter';
-import { SyntaxNode } from 'web-tree-sitter';
+import type { SyntaxNode } from 'web-tree-sitter';
 import LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
-import { Command, Option } from './types';
+import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
 import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage } from './utils';
 

@@ -1,6 +1,6 @@
 import BetterSqlite3 from 'better-sqlite3';
 import Database from 'better-sqlite3';
-import { Command } from './types';
+import type { Command } from './types';
 import fs from 'fs';
 
 

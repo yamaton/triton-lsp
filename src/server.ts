@@ -1,6 +1,5 @@
 import LSP from 'vscode-languageserver/node';
 import Analyzer from './analyzer';
-export {};  // make this file module
 
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise

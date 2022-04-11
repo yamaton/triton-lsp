@@ -1,4 +1,4 @@
-import { Option } from "./types";
+import type { Option } from "./types";
 import Parser from 'web-tree-sitter';
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Position, Range, Hover, uinteger, integer, MarkupContent, MarkupKind } from "vscode-languageserver-types";
