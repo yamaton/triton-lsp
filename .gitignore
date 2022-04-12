@@ -1,3 +1,9 @@
+# local edit config
+.editorconfig
+
+# outDir
+out
+
 # Logs
 logs
 *.log
@@ -102,3 +108,4 @@ dist
 
 # TernJS port file
 .tern-port
+
