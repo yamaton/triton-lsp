@@ -1,4 +1,5 @@
 import LSP from 'vscode-languageserver/node';
+import { ServerCapabilities } from 'vscode-languageserver-protocol';
 import Analyzer from './analyzer';
 
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
@@ -7,53 +8,24 @@ let analyzer: Analyzer;
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
-let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize(async (params: LSP.InitializeParams) => {
-  analyzer = await Analyzer.initialize();  // Initialize here to resolve the promise of initializeParser()
+  // Initialize analyzer here to resolve the promise of initializeParser()
+  analyzer = await Analyzer.initialize();
 
-  const capabilities = params.capabilities;
-
-  // Does the client support the `workspace/configuration` request?
-  // If not, we fall back using global settings.
-  hasConfigurationCapability = !!(
-    capabilities.workspace && !!capabilities.workspace.configuration
-  );
-  hasWorkspaceFolderCapability = !!(
-    capabilities.workspace && !!capabilities.workspace.workspaceFolders
-  );
-  hasDiagnosticRelatedInformationCapability = !!(
-    capabilities.textDocument &&
-    capabilities.textDocument.publishDiagnostics &&
-    capabilities.textDocument.publishDiagnostics.relatedInformation
-  );
+  // [FIXME] ignore client capabilities for now
+  const clientCapabilities = params.capabilities;
 
   const result: LSP.InitializeResult = {
-    capabilities: {
-      textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
-
-      completionProvider: {
-        resolveProvider: true,
-        triggerCharacters: [' '],
-      },
-      hoverProvider: true,
-    }
+    capabilities: serverCapabilities
   };
 
-  if (hasWorkspaceFolderCapability) {
-    result.capabilities.workspace = {
-      workspaceFolders: {
-        supported: true
-      }
-    };
-  }
   return result;
 });
 
 
 connection.onInitialized(() => {
   if (hasConfigurationCapability) {
-    // Register for all configuration changes.
     connection.client.register(LSP.DidChangeConfigurationNotification.type, undefined);
   }
   if (hasWorkspaceFolderCapability) {
@@ -82,3 +54,30 @@ connection.onDidChangeTextDocument((params: LSP.DidChangeTextDocumentParams) => 
 connection.onCompletion((params: LSP.CompletionParams) => analyzer.provideCompletion(params));
 connection.onHover((params: LSP.HoverParams) => analyzer.provideHover(params));
 
+
+
+const serverCapabilities: ServerCapabilities = {
+  // For now we're using full-sync even though tree-sitter has great support
+  // for partial updates.
+  textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
+  completionProvider: {
+    resolveProvider: true,
+    triggerCharacters: [' '],
+
+    // // [FIXME]
+    // // The following enables completion label details.
+    // // This feature is still in proposed state for 3.17.0.
+    // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
+    //
+    // completionItem: {
+    //   labelDetailsSupport: true
+    // }
+
+  },
+  hoverProvider: true,
+  // documentHighlightProvider: true,
+  // definitionProvider: true,
+  // documentSymbolProvider: true,
+  // workspaceSymbolProvider: true,
+  // referencesProvider: true,
+}
