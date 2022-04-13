@@ -2,95 +2,110 @@
 
 import chai from "chai";
 import * as child_process from "child_process";
-const assert = chai.assert;
-import { MarkupKind } from 'vscode-languageserver-types'
+import { DocumentUri, MarkupKind } from 'vscode-languageserver-types'
+import { ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseError, ResponseMessage } from 'vscode-languageserver-protocol'
 import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
 
+const assert = chai.assert;
 
 
 // fork the server and connect to it using Node IPC
-let lspProcess = child_process.fork("bin/main.js", ["--node-ipc"]);
-let messageId = 1;
+const lspProcess = child_process.fork("bin/main.js", ["--node-ipc"]);
+let messageId = 42;
 
 
-function sendRequest(method: string, params: any): number {
-  let message = {
+function sendRequest(ps: child_process.ChildProcess, method: string, params: any): number {
+  const message: RequestMessage = {
     jsonrpc: "2.0",
     id: messageId++,
     method: method,
     params: params
   };
-  lspProcess.send(message);
+  ps.send(message);
   return messageId - 1;
 }
 
 
-function sendNotification(method: string, params: any) {
-  let message = {
+function sendNotification(ps: child_process.ChildProcess, method: string, params: any) {
+  const message: NotificationMessage = {
     jsonrpc: "2.0",
     method: method,
     params: params
   };
-  lspProcess.send(message);
+  ps.send(message);
 }
 
 
-function initialize(): number {
-
-  const capabilities = {
-    textDocument: {
-      completion: {
-        completionItem: {
-          documentationFormat: [MarkupKind.Markdown],
-          snippetSupport: true,
-          // labelDetailSupport: true,    // [TODO] Enable since 3.17
-        }
-      },
-      hover: {
-        contentFormat: [MarkupKind.Markdown]
-      },
+const clientCapabilities: ClientCapabilities = {
+  textDocument: {
+    completion: {
+      completionItem: {
+        documentationFormat: [MarkupKind.Markdown],
+        snippetSupport: true,
+        // labelDetailSupport: true,    // [TODO] Enable since 3.17
+      }
     },
-  };
+    hover: {
+      contentFormat: [MarkupKind.Markdown]
+    }
+  }
+};
 
-  const params = {
-    rootPath: process.cwd(),
+
+function initialize(): number {
+  const rootUri: DocumentUri = process.cwd();
+  const params: InitializeParams = {
     processId: process.pid,
-    capabilities
+    rootUri,
+    workspaceFolders: [
+      {
+        uri: rootUri,
+        name: "something"
+      }
+    ],
+    capabilities: clientCapabilities,
   }
 
-  return sendRequest("initialize", params);
+  return sendRequest(lspProcess, "initialize", params);
 }
 
 
 describe("LSP Tests", () => {
-  it("baba", (done) => {
-    done();
-  });
 
   it("initialize", (done) => {
     const responseId = initialize();
-    lspProcess.once('message', function (json: InitializeResult) {
-      assert.equal(json.id, responseId);
-      let capabilities = json.capabilities;
-      assert.equal(capabilities.textDocumentSync, TextDocumentSyncKind.Incremental);
-      assert.equal(capabilities.completionProvider?.resolveProvider, true);
-      assert.equal(capabilities.hoverProvider, true);
-      assert.equal(capabilities.codeActionProvider, undefined);
-      assert.equal(capabilities.foldingRangeProvider, undefined);
-      assert.equal(capabilities.renameProvider, undefined);
+    lspProcess.once('message', (json: ResponseMessage | ResponseError) => {
+
+      console.log(`[LSP Tests] Object.keys(json) = ${Object.keys(json)}`);
+      if ('error' in json) {
+        assert.fail(`Got ResponseError: ${json.error?.message}`);
+      }
+      const msg = json as ResponseMessage;
+      assert.strictEqual(msg.id, responseId);
+      const result = msg.result as InitializeResult;
+      const capabilities = result.capabilities;
+
+      assert.deepStrictEqual(capabilities.textDocumentSync, TextDocumentSyncKind.Incremental);
+      assert.strictEqual(capabilities.completionProvider?.resolveProvider, true);
+      assert.strictEqual(capabilities.hoverProvider, true);
+      assert.strictEqual(capabilities.codeActionProvider, undefined);
+      assert.strictEqual(capabilities.foldingRangeProvider, undefined);
+      assert.strictEqual(capabilities.renameProvider, undefined);
+
       done();
+
     });
   }).timeout(5000);
 
 
-  it("initialized", () => {
-    sendNotification("initialized", {});
+  it("initialized", (done) => {
+    sendNotification(lspProcess, "initialized", {});
+    done();
   });
 
 
-
   // it("definition", function (done) {
-  //   sendNotification("textDocument/didOpen", {
+  //   sendNotification(lspProcess, "textDocument/didOpen", {
   //     textDocument: {
   //       languageId: "shellscript",
   //       version: 1,
@@ -99,7 +114,7 @@ describe("LSP Tests", () => {
   //     }
   //   });
 
-  //   const requestId = sendRequest("textDocument/definition", {
+  //   const requestId = sendRequest(lspProcess, "textDocument/definition", {
   //     textDocument: {
   //       uri: "uri://definition.txt",
   //     },
@@ -124,7 +139,7 @@ describe("LSP Tests", () => {
   // });
 
   // it("formatting", function (done) {
-  //   sendNotification("textDocument/didOpen", {
+  //   sendNotification(lspProcess, "textDocument/didOpen", {
   //     textDocument: {
   //       languageId: "shellscript",
   //       version: 1,
@@ -133,7 +148,7 @@ describe("LSP Tests", () => {
   //     }
   //   });
 
-  //   const requestId = sendRequest("textDocument/formatting", {
+  //   const requestId = sendRequest(lspProcess, "textDocument/formatting", {
   //     textDocument: {
   //       uri: "uri://formatting.txt",
   //     },
@@ -160,7 +175,7 @@ describe("LSP Tests", () => {
   // });
 
   // it("range formatting", function (done) {
-  //   sendNotification("textDocument/didOpen", {
+  //   sendNotification(lspProcess, "textDocument/didOpen", {
   //     textDocument: {
   //       languageId: "shellscript",
   //       version: 1,
@@ -169,7 +184,7 @@ describe("LSP Tests", () => {
   //     }
   //   });
 
-  //   const requestId = sendRequest("textDocument/rangeFormatting", {
+  //   const requestId = sendRequest(lspProcess, "textDocument/rangeFormatting", {
   //     textDocument: {
   //       uri: "uri://range-formatting.txt",
   //     },
@@ -206,7 +221,7 @@ describe("LSP Tests", () => {
   // });
 
   // it("on type formatting", (done) => {
-  //   sendNotification("textDocument/didOpen", {
+  //   sendNotification(lspProcess, "textDocument/didOpen", {
   //     textDocument: {
   //       languageId: "shellscript",
   //       version: 1,
@@ -215,7 +230,7 @@ describe("LSP Tests", () => {
   //     }
   //   });
 
-  //   const requestId = sendRequest("textDocument/onTypeFormatting", {
+  //   const requestId = sendRequest(lspProcess, "textDocument/onTypeFormatting", {
   //     textDocument: {
   //       uri: "uri://on-type-formatting.txt",
   //     },
@@ -247,7 +262,7 @@ describe("LSP Tests", () => {
   // });
 
   // it("rename", (done) => {
-  //   sendNotification("textDocument/didOpen", {
+  //   sendNotification(lspProcess, "textDocument/didOpen", {
   //     textDocument: {
   //       languageId: "shellscript",
   //       version: 1,
@@ -256,7 +271,7 @@ describe("LSP Tests", () => {
   //     }
   //   });
 
-  //   const requestId = sendRequest("textDocument/rename", {
+  //   const requestId = sendRequest(lspProcess, "textDocument/rename", {
   //     textDocument: {
   //       uri: "uri://rename.txt",
   //     },
@@ -283,5 +298,11 @@ describe("LSP Tests", () => {
   //   };
   //   lspProcess.on("message", listener);
   // });
+
+
+  // Terminate LSP
+  after(() => {
+    lspProcess.kill();
+  });
 
 });

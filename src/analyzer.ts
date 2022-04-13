@@ -1,6 +1,6 @@
 import Parser from 'web-tree-sitter';
 import type { SyntaxNode } from 'web-tree-sitter';
-import LSP from 'vscode-languageserver/node';
+import * as LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
 import type { Command, Option } from './types';
@@ -16,7 +16,7 @@ type MyTextDocuments = { [uri: string]: TextDocument };
 async function initializeParser(): Promise<Parser> {
   await Parser.init();
   const parser = new Parser();
-  const path = `${__dirname}/../tree-sitter-bash.wasm`;
+  const path = `${__dirname}/../../tree-sitter-bash.wasm`;
   const lang = await Parser.Language.load(path);
   parser.setLanguage(lang);
   return parser;

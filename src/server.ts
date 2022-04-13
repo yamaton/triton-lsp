@@ -1,5 +1,5 @@
-import LSP from 'vscode-languageserver/node';
-import { ServerCapabilities, TextDocumentSyncKind } from 'vscode-languageserver-protocol';
+import * as LSP from 'vscode-languageserver/node';
+import { InitializeResult, ServerCapabilities, TextDocumentSyncKind } from 'vscode-languageserver-protocol';
 import Analyzer from './analyzer';
 
 
@@ -37,12 +37,12 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 
 
-connection.onInitialize(async (params: LSP.InitializeParams) => {
+connection.onInitialize(async (params: LSP.InitializeParams): Promise<InitializeResult> => {
   // Initialize analyzer here to resolve the promise of initializeParser()
   analyzer = await Analyzer.initialize();
 
   // [FIXME] ignore client capabilities for now
-  const clientCapabilities = params.capabilities;
+  // const clientCapabilities = params.capabilities;
 
   const result: LSP.InitializeResult = {
     capabilities: serverCapabilities
