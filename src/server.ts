@@ -1,12 +1,12 @@
 import LSP from 'vscode-languageserver/node';
-import { ServerCapabilities } from 'vscode-languageserver-protocol';
+import { ServerCapabilities, TextDocumentSyncKind } from 'vscode-languageserver-protocol';
 import Analyzer from './analyzer';
 
 
 const serverCapabilities: ServerCapabilities = {
   // For now we're using full-sync even though tree-sitter has great support
   // for partial updates.
-  textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
+  textDocumentSync: TextDocumentSyncKind.Incremental,
   completionProvider: {
     resolveProvider: true,
     triggerCharacters: [' '],
