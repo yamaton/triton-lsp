@@ -71,9 +71,9 @@ describe("LSP Tests", () => {
     const responseId = initialize();
     lspProcess.once('message', function (json: InitializeResult) {
       assert.equal(json.id, responseId);
-      let capabilities = json.result.capabilities;
+      let capabilities = json.capabilities;
       assert.equal(capabilities.textDocumentSync, TextDocumentSyncKind.Incremental);
-      assert.equal(capabilities.completionProvider, true);
+      assert.equal(capabilities.completionProvider?.resolveProvider, true);
       assert.equal(capabilities.hoverProvider, true);
       assert.equal(capabilities.codeActionProvider, undefined);
       assert.equal(capabilities.foldingRangeProvider, undefined);
