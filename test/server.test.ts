@@ -9,9 +9,8 @@ import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
 
 
 // fork the server and connect to it using Node IPC
-let lspProcess = child_process.fork("out/server.js", ["--node-ipc"]);
+let lspProcess = child_process.fork("bin/main.js", ["--node-ipc"]);
 let messageId = 1;
-
 
 
 function sendRequest(method: string, params: any): number {
@@ -37,7 +36,8 @@ function sendNotification(method: string, params: any) {
 
 
 function initialize(): number {
-  return initializeCustomCapabilities({
+
+  const capabilities = {
     textDocument: {
       completion: {
         completionItem: {
@@ -50,22 +50,24 @@ function initialize(): number {
         contentFormat: [MarkupKind.Markdown]
       },
     },
-  });
-}
+  };
 
-
-function initializeCustomCapabilities(capabilities: any): number {
-  return sendRequest("initialize", {
+  const params = {
     rootPath: process.cwd(),
     processId: process.pid,
     capabilities
-  });
+  }
+
+  return sendRequest("initialize", params);
 }
 
 
 describe("LSP Tests", () => {
-  it("initialize", function (done) {
-    this.timeout(5000);
+  it("baba", (done) => {
+    done();
+  });
+
+  it("initialize", (done) => {
     const responseId = initialize();
     lspProcess.once('message', function (json: InitializeResult) {
       assert.equal(json.id, responseId);
@@ -78,12 +80,13 @@ describe("LSP Tests", () => {
       assert.equal(capabilities.renameProvider, undefined);
       done();
     });
-  });
+  }).timeout(5000);
 
 
-  it("initialized", function () {
+  it("initialized", () => {
     sendNotification("initialized", {});
   });
+
 
 
   // it("definition", function (done) {
