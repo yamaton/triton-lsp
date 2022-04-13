@@ -2,12 +2,40 @@ import LSP from 'vscode-languageserver/node';
 import { ServerCapabilities } from 'vscode-languageserver-protocol';
 import Analyzer from './analyzer';
 
+
+const serverCapabilities: ServerCapabilities = {
+  // For now we're using full-sync even though tree-sitter has great support
+  // for partial updates.
+  textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
+  completionProvider: {
+    resolveProvider: true,
+    triggerCharacters: [' '],
+
+    // // [FIXME]
+    // // The following enables completion label details.
+    // // This feature is still in proposed state for 3.17.0.
+    // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
+    //
+    // completionItem: {
+    //   labelDetailsSupport: true
+    // }
+
+  },
+  hoverProvider: true,
+  // documentHighlightProvider: true,
+  // definitionProvider: true,
+  // documentSymbolProvider: true,
+  // workspaceSymbolProvider: true,
+  // referencesProvider: true,
+}
+
+
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
-
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
+
 
 connection.onInitialize(async (params: LSP.InitializeParams) => {
   // Initialize analyzer here to resolve the promise of initializeParser()
@@ -55,29 +83,5 @@ connection.onCompletion((params: LSP.CompletionParams) => analyzer.provideComple
 connection.onHover((params: LSP.HoverParams) => analyzer.provideHover(params));
 
 
-
-const serverCapabilities: ServerCapabilities = {
-  // For now we're using full-sync even though tree-sitter has great support
-  // for partial updates.
-  textDocumentSync: LSP.TextDocumentSyncKind.Incremental,
-  completionProvider: {
-    resolveProvider: true,
-    triggerCharacters: [' '],
-
-    // // [FIXME]
-    // // The following enables completion label details.
-    // // This feature is still in proposed state for 3.17.0.
-    // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
-    //
-    // completionItem: {
-    //   labelDetailsSupport: true
-    // }
-
-  },
-  hoverProvider: true,
-  // documentHighlightProvider: true,
-  // definitionProvider: true,
-  // documentSymbolProvider: true,
-  // workspaceSymbolProvider: true,
-  // referencesProvider: true,
-}
+// start listening after setups
+connection.listen();
