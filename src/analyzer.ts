@@ -1,3 +1,4 @@
+import fs from 'fs';
 import Parser from 'web-tree-sitter';
 import type { SyntaxNode } from 'web-tree-sitter';
 import * as LSP from 'vscode-languageserver/node';
@@ -17,6 +18,9 @@ async function initializeParser(): Promise<Parser> {
   await Parser.init();
   const parser = new Parser();
   const path = `${__dirname}/../../tree-sitter-bash.wasm`;
+  if (!fs.existsSync(path)) {
+    throw new Error(`tree-sitter-bash.wasm is not found`);
+  }
   const lang = await Parser.Language.load(path);
   parser.setLanguage(lang);
   return parser;

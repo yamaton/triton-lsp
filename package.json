@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Language server for Triton notebook",
   "scripts": {
-    "start": "tsc && node out/server.js",
+    "start": "tsc && node bin/main.js",
+    "pretest": "tsc -b",
     "test": "mocha --require ts-node/register test/**/*.ts"
   },
   "repository": {
