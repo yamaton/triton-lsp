@@ -4,7 +4,7 @@ import type { Command } from './types';
 import fs from 'fs';
 
 
-const defaultDbPath = `${__dirname}/../commandspecs.db`;
+const defaultDbPath = `commandspecs.db`;
 
 // Memento is interface to sqlite3 database + cache as replacement to Memento in VS Code.
 export class Memento {

@@ -2,8 +2,11 @@
 
 import chai from "chai";
 import * as child_process from "child_process";
-import { DocumentUri, MarkupKind } from 'vscode-languageserver-types'
-import { ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseError, ResponseMessage } from 'vscode-languageserver-protocol'
+import { CompletionItem, CompletionList, DocumentUri, MarkupKind, Position, TextDocumentItem } from 'vscode-languageserver-types'
+import type {
+  ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseMessage,
+  DidOpenTextDocumentParams, CompletionParams
+} from 'vscode-languageserver-protocol'
 import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
 
 const assert = chai.assert;
@@ -74,15 +77,14 @@ describe("LSP Tests", () => {
 
   it("initialize", (done) => {
     const responseId = initialize();
-    lspProcess.once('message', (json: ResponseMessage | ResponseError) => {
+    lspProcess.once('message', (json: ResponseMessage) => {
 
       console.log(`[LSP Tests] Object.keys(json) = ${Object.keys(json)}`);
       if ('error' in json) {
         assert.fail(`Got ResponseError: ${json.error?.message}`);
       }
-      const msg = json as ResponseMessage;
-      assert.strictEqual(msg.id, responseId);
-      const result = msg.result as InitializeResult;
+      assert.strictEqual(json.id, responseId);
+      const result = json.result as InitializeResult;
       const capabilities = result.capabilities;
 
       assert.deepStrictEqual(capabilities.textDocumentSync, TextDocumentSyncKind.Incremental);
@@ -104,200 +106,43 @@ describe("LSP Tests", () => {
   });
 
 
-  // it("definition", function (done) {
-  //   sendNotification(lspProcess, "textDocument/didOpen", {
-  //     textDocument: {
-  //       languageId: "shellscript",
-  //       version: 1,
-  //       uri: "uri://definition.txt",
-  //       text: "FROM node AS setup"
-  //     }
-  //   });
+  it("completion 1", (done) => {
+    const uri = "uri://path/to/comp1.sh"
+    const textDocumentComp1 = TextDocumentItem.create(uri, "shellscript", 1, "curl --ins  ");
+    const paramsCom1: DidOpenTextDocumentParams = { textDocument: textDocumentComp1 };
+    sendNotification(lspProcess, "textDocument/didOpen", paramsCom1);
 
-  //   const requestId = sendRequest(lspProcess, "textDocument/definition", {
-  //     textDocument: {
-  //       uri: "uri://definition.txt",
-  //     },
-  //     position: {
-  //       line: 0,
-  //       character: 15
-  //     }
-  //   });
+    const completionParamsCom1: CompletionParams = {
+      textDocument: { uri },
+      position: Position.create(0, 10),
+    };
 
-  //   const listener = (json) => {
-  //     if (json.id === requestId) {
-  //       lspProcess.removeListener("message", listener);
-  //       assert.strictEqual(json.result.uri, "uri://definition.txt");
-  //       assert.strictEqual(json.result.range.start.line, 0);
-  //       assert.strictEqual(json.result.range.start.character, 13);
-  //       assert.strictEqual(json.result.range.end.line, 0);
-  //       assert.strictEqual(json.result.range.end.character, 18);
-  //       done();
-  //     }
-  //   };
-  //   lspProcess.on("message", listener);
-  // });
+    const id = sendRequest(lspProcess, "textDocument/completion", completionParamsCom1);
+    lspProcess.once("message", (json: ResponseMessage) => {
 
-  // it("formatting", function (done) {
-  //   sendNotification(lspProcess, "textDocument/didOpen", {
-  //     textDocument: {
-  //       languageId: "shellscript",
-  //       version: 1,
-  //       uri: "uri://formatting.txt",
-  //       text: " FROM node AS setup"
-  //     }
-  //   });
+      if ('error' in json) {
+        assert.fail(`Got ResponseError: ${json.error?.message}`);
+      }
 
-  //   const requestId = sendRequest(lspProcess, "textDocument/formatting", {
-  //     textDocument: {
-  //       uri: "uri://formatting.txt",
-  //     },
-  //     options: {
-  //       insertSpaces: true,
-  //       tabSize: 4
-  //     }
-  //   });
+      // [TODO] check all possible IDs returned
+      if (json.id === id) {
+        const result = json.result as CompletionItem[];
+        if (!Array.isArray(result)) {
+          assert.fail("[completion 1] Result is not an array.");
+        } else if (result.length == 0) {
+          assert.fail("[completion 1] completion item list is empty.");
+        }
 
-  //   const listener = (json) => {
-  //     if (json.id === requestId) {
-  //       lspProcess.removeListener("message", listener);
-  //       assert.ok(json.result instanceof Array);
-  //       assert.strictEqual(json.result.length, 1);
-  //       assert.strictEqual(json.result[0].newText, "");
-  //       assert.strictEqual(json.result[0].range.start.line, 0);
-  //       assert.strictEqual(json.result[0].range.start.character, 0);
-  //       assert.strictEqual(json.result[0].range.end.line, 0);
-  //       assert.strictEqual(json.result[0].range.end.character, 1);
-  //       done();
-  //     }
-  //   };
-  //   lspProcess.on("message", listener);
-  // });
+        const labels = result.map(item => item.label);
+        console.log(`[Autocomplete] labels = ${labels}`);
+        done();
+      } else {
+        assert.fail(`[completion 1] What is this id? ${json.id}`);
+      }
 
-  // it("range formatting", function (done) {
-  //   sendNotification(lspProcess, "textDocument/didOpen", {
-  //     textDocument: {
-  //       languageId: "shellscript",
-  //       version: 1,
-  //       uri: "uri://range-formatting.txt",
-  //       text: " FROM node AS setup"
-  //     }
-  //   });
+    });
+  }).timeout(5000);
 
-  //   const requestId = sendRequest(lspProcess, "textDocument/rangeFormatting", {
-  //     textDocument: {
-  //       uri: "uri://range-formatting.txt",
-  //     },
-  //     range: {
-  //       start: {
-  //         line: 0,
-  //         character: 0
-  //       },
-  //       end: {
-  //         line: 0,
-  //         character: 3
-  //       }
-  //     },
-  //     options: {
-  //       insertSpaces: true,
-  //       tabSize: 4
-  //     }
-  //   });
-
-  //   const listener = (json) => {
-  //     if (json.id === requestId) {
-  //       lspProcess.removeListener("message", listener);
-  //       assert.ok(json.result instanceof Array);
-  //       assert.strictEqual(json.result.length, 1);
-  //       assert.strictEqual(json.result[0].newText, "");
-  //       assert.strictEqual(json.result[0].range.start.line, 0);
-  //       assert.strictEqual(json.result[0].range.start.character, 0);
-  //       assert.strictEqual(json.result[0].range.end.line, 0);
-  //       assert.strictEqual(json.result[0].range.end.character, 1);
-  //       done();
-  //     }
-  //   };
-  //   lspProcess.on("message", listener);
-  // });
-
-  // it("on type formatting", (done) => {
-  //   sendNotification(lspProcess, "textDocument/didOpen", {
-  //     textDocument: {
-  //       languageId: "shellscript",
-  //       version: 1,
-  //       uri: "uri://on-type-formatting.txt",
-  //       text: "FROM node AS setup\nRUN echo \necho"
-  //     }
-  //   });
-
-  //   const requestId = sendRequest(lspProcess, "textDocument/onTypeFormatting", {
-  //     textDocument: {
-  //       uri: "uri://on-type-formatting.txt",
-  //     },
-  //     position: {
-  //       line: 1,
-  //       character: 9
-  //     },
-  //     ch: '\\',
-  //     options: {
-  //       insertSpaces: true,
-  //       tabSize: 4
-  //     }
-  //   });
-
-  //   const listener = (json) => {
-  //     if (json.id === requestId) {
-  //       lspProcess.removeListener("message", listener);
-  //       assert.ok(json.result instanceof Array);
-  //       assert.strictEqual(json.result.length, 1);
-  //       assert.strictEqual(json.result[0].newText, "    ");
-  //       assert.strictEqual(json.result[0].range.start.line, 2);
-  //       assert.strictEqual(json.result[0].range.start.character, 0);
-  //       assert.strictEqual(json.result[0].range.end.line, 2);
-  //       assert.strictEqual(json.result[0].range.end.character, 0);
-  //       done();
-  //     }
-  //   };
-  //   lspProcess.on("message", listener);
-  // });
-
-  // it("rename", (done) => {
-  //   sendNotification(lspProcess, "textDocument/didOpen", {
-  //     textDocument: {
-  //       languageId: "shellscript",
-  //       version: 1,
-  //       uri: "uri://rename.txt",
-  //       text: "FROM node AS setup"
-  //     }
-  //   });
-
-  //   const requestId = sendRequest(lspProcess, "textDocument/rename", {
-  //     textDocument: {
-  //       uri: "uri://rename.txt",
-  //     },
-  //     position: {
-  //       line: 0,
-  //       character: 15
-  //     },
-  //     newName: "build"
-  //   });
-
-  //   const listener = (json) => {
-  //     if (json.id === requestId) {
-  //       lspProcess.removeListener("message", listener);
-  //       const changes = json.result.changes["uri://rename.txt"];
-  //       assert.ok(changes instanceof Array);
-  //       assert.strictEqual(changes.length, 1);
-  //       assert.strictEqual(changes[0].newText, "build");
-  //       assert.strictEqual(changes[0].range.start.line, 0);
-  //       assert.strictEqual(changes[0].range.start.character, 13);
-  //       assert.strictEqual(changes[0].range.end.line, 0);
-  //       assert.strictEqual(changes[0].range.end.character, 18);
-  //       done();
-  //     }
-  //   };
-  //   lspProcess.on("message", listener);
-  // });
 
 
   // Terminate LSP

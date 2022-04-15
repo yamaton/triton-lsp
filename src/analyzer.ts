@@ -17,7 +17,7 @@ type MyTextDocuments = { [uri: string]: TextDocument };
 async function initializeParser(): Promise<Parser> {
   await Parser.init();
   const parser = new Parser();
-  const path = `${__dirname}/../../tree-sitter-bash.wasm`;
+  const path = `tree-sitter-bash.wasm`;
   if (!fs.existsSync(path)) {
     throw new Error(`tree-sitter-bash.wasm is not found`);
   }
@@ -480,7 +480,7 @@ export default class Analyzer {
       }
       return seq;
     } catch (e) {
-      console.error("[getContextCmdSeq] Error: ", e);
+      console.error("[getContextCmdSeq] Error:", e);
       return Promise.reject("[getContextCmdSeq] unknown command!");
     }
   }

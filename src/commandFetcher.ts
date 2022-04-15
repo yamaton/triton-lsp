@@ -63,11 +63,11 @@ export default class CommandFetcher {
 
     let cached = this.getCache(name);
     if (cached) {
-      console.log('[CommandFetcher.fetch] Fetching from cache: ', name);
+      console.log('[CommandFetcher.fetch] Fetching from cache:', name);
       return cached;
     }
 
-    console.log('[CommandFetcher.fetch] Fetching from H2O: ', name);
+    console.log('[CommandFetcher.fetch] Fetching from H2O:', name);
     try {
       const command = runH2o(name);
       if (!command) {
@@ -82,7 +82,7 @@ export default class CommandFetcher {
       return command;
 
     } catch (e) {
-      console.log("[CommandFetcher.fetch] Error: ", e);
+      console.log("[CommandFetcher.fetch] Error:", e);
       return Promise.reject(`[CommandFetcher.fetch] Failed in CommandFetcher.update() with name = ${name}`);
     }
   }
