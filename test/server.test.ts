@@ -2,10 +2,10 @@
 
 import chai from "chai";
 import * as child_process from "child_process";
-import { CompletionItem, CompletionList, DocumentUri, MarkupKind, Position, TextDocumentItem } from 'vscode-languageserver-types'
+import { CompletionItem, CompletionList, DocumentUri, Hover, MarkupContent, MarkupKind, Position, TextDocumentItem } from 'vscode-languageserver-types'
 import type {
   ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseMessage,
-  DidOpenTextDocumentParams, CompletionParams
+  DidOpenTextDocumentParams, CompletionParams, HoverParams, TextDocumentPositionParams
 } from 'vscode-languageserver-protocol'
 import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
 
@@ -73,6 +73,24 @@ function initialize(): number {
 }
 
 
+function prepare(text: string, position: Position, uri: string = "file://some/text/document.sh"): [
+  DidOpenTextDocumentParams, TextDocumentPositionParams] {
+
+  const textDocument = {
+    uri,
+    languageId: "shellscript",
+    version: 2,
+    text
+  };
+  const textDocumentIdentifier = { uri };
+  const didOpenTextDocumentParams = { textDocument };
+  const textDocumentPositionParams = { position, textDocument: textDocumentIdentifier };
+
+  return [didOpenTextDocumentParams, textDocumentPositionParams]
+}
+
+
+
 describe("LSP Tests", () => {
 
   it("initialize", (done) => {
@@ -107,17 +125,11 @@ describe("LSP Tests", () => {
 
 
   it("completion 1", (done) => {
-    const uri = "uri://path/to/comp1.sh"
-    const textDocumentComp1 = TextDocumentItem.create(uri, "shellscript", 1, "curl --ins  ");
-    const paramsCom1: DidOpenTextDocumentParams = { textDocument: textDocumentComp1 };
-    sendNotification(lspProcess, "textDocument/didOpen", paramsCom1);
-
-    const completionParamsCom1: CompletionParams = {
-      textDocument: { uri },
-      position: Position.create(0, 10),
-    };
-
-    const id = sendRequest(lspProcess, "textDocument/completion", completionParamsCom1);
+    const text = "curl --ins  ";
+    const position = Position.create(0, 10);
+    const [ didOpenTextDocumentParams, completionParams1 ] = prepare(text, position);
+    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
+    const id = sendRequest(lspProcess, "textDocument/completion", completionParams1);
     lspProcess.once("message", (json: ResponseMessage) => {
 
       if ('error' in json) {
@@ -143,6 +155,40 @@ describe("LSP Tests", () => {
     });
   }).timeout(5000);
 
+
+  it("hover 1", (done) => {
+    const text = "curl --insecure ";
+    const position = Position.create(0, 10);
+    const [ didOpenTextDocumentParams, hoverParamsCom1 ] = prepare(text, position);
+    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+
+    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
+    const id = sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
+    lspProcess.once("message", (json: ResponseMessage) => {
+
+      if ('error' in json) {
+        assert.fail(`Got ResponseError: ${json.error?.message}`);
+      }
+
+      // [TODO] check all possible IDs returned
+      if (json.id === id) {
+        if (Hover.is(json.result)) {
+          if (MarkupContent.is(json.result.contents)) {
+            assert.strictEqual(json.result.contents.kind, MarkupKind.Markdown);
+            assert.strictEqual(json.result.contents.value, expected);
+            done();
+          } else {
+            assert.fail("[hover 1] Expect hover to be MarkupContent.")
+          }
+        } else {
+          assert.fail("[hover 1] result is not Hover.");
+        }
+      } else {
+        assert.fail(`[hover 1] What is this id? ${json.id}`);
+      }
+
+    });
+  }).timeout(5000);
 
 
   // Terminate LSP
