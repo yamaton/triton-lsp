@@ -53,6 +53,7 @@ connection.onInitialize(async (params: LSP.InitializeParams): Promise<Initialize
 
 
 connection.onInitialized(() => {
+  connection.console.log('[triton-lsp] onInitialized');
   if (hasConfigurationCapability) {
     connection.client.register(LSP.DidChangeConfigurationNotification.type, undefined);
   }
@@ -65,22 +66,32 @@ connection.onInitialized(() => {
 
 
 connection.onDidOpenTextDocument((params: LSP.DidOpenTextDocumentParams) => {
+  connection.console.log('[triton-lsp] onDidOpenTextDocument');
   analyzer.open(params);
 });
 
 
 connection.onDidCloseTextDocument((params: LSP.DidCloseTextDocumentParams) => {
+  connection.console.log('[triton-lsp] onDidCloseTextDocument');
   analyzer.close(params);
 });
 
 
 connection.onDidChangeTextDocument((params: LSP.DidChangeTextDocumentParams) => {
+  connection.console.log('[triton-lsp] onDidChangeTextDocument');
   analyzer.update(params);
 });
 
 
-connection.onCompletion((params: LSP.CompletionParams) => analyzer.provideCompletion(params));
-connection.onHover((params: LSP.HoverParams) => analyzer.provideHover(params));
+connection.onCompletion((params: LSP.CompletionParams) => {
+  connection.console.log('[triton-lsp] onCompletion');
+  return analyzer.provideCompletion(params);
+});
+
+connection.onHover((params: LSP.HoverParams) => {
+  connection.console.log('[triton-lsp] onHover');
+  return analyzer.provideHover(params);
+});
 
 
 // start listening after setups
