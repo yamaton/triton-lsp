@@ -6,7 +6,7 @@ import { CompletionItem, CompletionList, DocumentUri, Hover, MarkupContent, Mark
 import {
   ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseMessage,
   DidOpenTextDocumentParams, CompletionParams, HoverParams, TextDocumentPositionParams,
-  TextDocumentSyncKind, InitializeResult
+  TextDocumentSyncKind, InitializeResult, LogMessageParams
 } from 'vscode-languageserver-protocol';
 
 const assert = chai.assert;
@@ -17,6 +17,7 @@ const lspProcess = child_process.fork("bin/main.js", ["--node-ipc"]);
 let messageId = 42;
 
 
+// Send a request to the server
 function sendRequest(ps: child_process.ChildProcess, method: string, params: any): number {
   const message: RequestMessage = {
     jsonrpc: "2.0",
@@ -29,6 +30,7 @@ function sendRequest(ps: child_process.ChildProcess, method: string, params: any
 }
 
 
+// Send a notification to the server
 function sendNotification(ps: child_process.ChildProcess, method: string, params: any) {
   const message: NotificationMessage = {
     jsonrpc: "2.0",
@@ -55,6 +57,7 @@ const clientCapabilities: ClientCapabilities = {
 };
 
 
+// Send initialize request to the server
 function initialize(): number {
   const rootUri: DocumentUri = process.cwd();
   const params: InitializeParams = {
@@ -119,16 +122,27 @@ describe("LSP Tests", () => {
 
   it("initialized", (done) => {
     sendNotification(lspProcess, "initialized", {});
-    done();
+
+    // catch a logMessage notification from the server
+    lspProcess.once('message', (json: NotificationMessage) => {
+      assert.strictEqual(json.method, 'window/logMessage');
+      const params = json.params as LogMessageParams;
+      assert.strictEqual(params.message, "initialized!");
+      done();
+    });
   });
 
 
   it("completion 1", (done) => {
     const text = "curl --ins  ";
     const position = Position.create(0, 10);
-    const [ didOpenTextDocumentParams, completionParams1 ] = prepare(text, position);
+    const uri = 'file:///curl/text.sh';
+    const [didOpenTextDocumentParams, completionParams1] = prepare(text, position, uri);
+
+    // send 'textDocument/didOpen' notification. then receive log message
     sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
     const id = sendRequest(lspProcess, "textDocument/completion", completionParams1);
+
     lspProcess.once("message", (json: ResponseMessage) => {
 
       if ('error' in json) {
@@ -158,11 +172,12 @@ describe("LSP Tests", () => {
   it("hover 1", (done) => {
     const text = "curl --insecure ";
     const position = Position.create(0, 10);
-    const [ didOpenTextDocumentParams, hoverParamsCom1 ] = prepare(text, position);
+    const [didOpenTextDocumentParams, hoverParamsCom1] = prepare(text, position);
     const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
 
     sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
     const id = sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
+
     lspProcess.once("message", (json: ResponseMessage) => {
 
       if ('error' in json) {
@@ -170,7 +185,7 @@ describe("LSP Tests", () => {
       }
 
       // [TODO] check all possible IDs returned
-      if (json.id === id) {
+      if (json.id && json.id === id) {
         if (Hover.is(json.result)) {
           if (MarkupContent.is(json.result.contents)) {
             assert.strictEqual(json.result.contents.kind, MarkupKind.Markdown);
