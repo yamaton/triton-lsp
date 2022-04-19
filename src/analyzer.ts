@@ -1,9 +1,12 @@
 import fs from 'fs';
 import Parser from 'web-tree-sitter';
 import type { SyntaxNode } from 'web-tree-sitter';
-import * as LSP from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
+import {
+  TextDocumentContentChangeEvent, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
+  DidCloseTextDocumentParams, CompletionParams, HoverParams
+} from 'vscode-languageserver-protocol';
 import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
 import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage } from './utils';
@@ -296,14 +299,14 @@ export default class Analyzer {
 
 
   // Update both `this.trees` and `this.documents`
-  public update(params: LSP.DidChangeTextDocumentParams): void {
+  public update(params: DidChangeTextDocumentParams): void {
     const uri = params.textDocument.uri;
     const oldTree = this.trees[uri];
     const oldDoc = this.documents[uri];
     const edits: TextEdit[] = [];
 
     for (const e of params.contentChanges) {
-      if (LSP.TextDocumentContentChangeEvent.isIncremental(e)) {
+      if (TextDocumentContentChangeEvent.isIncremental(e)) {
         const delta = getDelta(e, oldDoc);
         oldTree.edit(delta);
         edits.push({ range: e.range, newText: e.text });
@@ -317,7 +320,7 @@ export default class Analyzer {
   }
 
 
-  public open(params: LSP.DidOpenTextDocumentParams): void {
+  public open(params: DidOpenTextDocumentParams): void {
     const td = params.textDocument;
     const uri = td.uri;
     const tree = this.parser.parse(td.text);
@@ -327,7 +330,7 @@ export default class Analyzer {
   }
 
 
-  public close(params: LSP.DidCloseTextDocumentParams): void {
+  public close(params: DidCloseTextDocumentParams): void {
     const uri = params.textDocument.uri;
     console.log(`[Analyzer] removing a parse tree: ${uri}`);
     if (!(uri in this.trees)) {
@@ -343,7 +346,7 @@ export default class Analyzer {
 
 
   // Completion provider
-  public async provideCompletion(params: LSP.CompletionParams): Promise<CompletionItem[]> {
+  public async provideCompletion(params: CompletionParams): Promise<CompletionItem[]> {
     const uri = params.textDocument.uri;
     const document = this.documents[uri];
     const position = params.position;
@@ -393,7 +396,7 @@ export default class Analyzer {
 
 
   // Hover provider
-  public async provideHover(params: LSP.HoverParams): Promise<Hover> {
+  public async provideHover(params: HoverParams): Promise<Hover> {
     const uri = params.textDocument.uri;
     const document = this.documents[uri];
     const position = params.position;

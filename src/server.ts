@@ -1,5 +1,10 @@
 import * as LSP from 'vscode-languageserver/node';
-import { InitializeResult, ServerCapabilities, TextDocumentSyncKind } from 'vscode-languageserver-protocol';
+import {
+  CompletionParams, DidChangeConfigurationNotification, DidChangeTextDocumentParams,
+  DidCloseTextDocumentParams, DidOpenTextDocumentParams,
+  HoverParams,
+  InitializeParams, InitializeResult, ServerCapabilities, TextDocumentSyncKind
+} from 'vscode-languageserver-protocol';
 import Analyzer from './analyzer';
 
 
@@ -37,14 +42,14 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 
 
-connection.onInitialize(async (params: LSP.InitializeParams): Promise<InitializeResult> => {
+connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   // Initialize analyzer here to resolve the promise of initializeParser()
   analyzer = await Analyzer.initialize();
 
   // [FIXME] ignore client capabilities for now
   // const clientCapabilities = params.capabilities;
 
-  const result: LSP.InitializeResult = {
+  const result: InitializeResult = {
     capabilities: serverCapabilities
   };
 
@@ -53,8 +58,10 @@ connection.onInitialize(async (params: LSP.InitializeParams): Promise<Initialize
 
 
 connection.onInitialized(() => {
+  connection.console.log('initialized!');
+
   if (hasConfigurationCapability) {
-    connection.client.register(LSP.DidChangeConfigurationNotification.type, undefined);
+    connection.client.register(DidChangeConfigurationNotification.type, undefined);
   }
   if (hasWorkspaceFolderCapability) {
     connection.workspace.onDidChangeWorkspaceFolders(_event => {
@@ -64,23 +71,30 @@ connection.onInitialized(() => {
 });
 
 
-connection.onDidOpenTextDocument((params: LSP.DidOpenTextDocumentParams) => {
+connection.onDidOpenTextDocument((params: DidOpenTextDocumentParams) => {
   analyzer.open(params);
 });
 
 
-connection.onDidCloseTextDocument((params: LSP.DidCloseTextDocumentParams) => {
+connection.onDidCloseTextDocument((params: DidCloseTextDocumentParams) => {
   analyzer.close(params);
 });
 
 
-connection.onDidChangeTextDocument((params: LSP.DidChangeTextDocumentParams) => {
+connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
   analyzer.update(params);
 });
 
 
-connection.onCompletion((params: LSP.CompletionParams) => analyzer.provideCompletion(params));
-connection.onHover((params: LSP.HoverParams) => analyzer.provideHover(params));
+connection.onCompletion((params: CompletionParams) => {
+  // connection.console.log("completion!");
+  return analyzer.provideCompletion(params);
+});
+
+connection.onHover((params: HoverParams) => {
+  // connection.console.log("hover!");
+  return analyzer.provideHover(params);
+});
 
 
 // start listening after setups
