@@ -27,7 +27,7 @@ const serverCapabilities: ServerCapabilities = {
   // documentSymbolProvider: true,
   // workspaceSymbolProvider: true,
   // referencesProvider: true,
-}
+};
 
 
 const connection = LSP.createConnection(LSP.ProposedFeatures.all);

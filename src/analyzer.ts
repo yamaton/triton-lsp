@@ -394,7 +394,7 @@ export default class Analyzer {
 
   // Hover provider
   public async provideHover(params: LSP.HoverParams): Promise<Hover> {
-    const uri = params.textDocument.uri
+    const uri = params.textDocument.uri;
     const document = this.documents[uri];
     const position = params.position;
     if (!this.parser) {

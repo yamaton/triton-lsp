@@ -21,17 +21,17 @@ function prepare(text: string, position: Position, uri: string = "file://some/te
   const didOpenTextDocumentParams = { textDocument };
   const completionParams = { position, textDocument: textDocumentIdentifier };
 
-  return { didOpenTextDocumentParams, completionParams }
+  return { didOpenTextDocumentParams, completionParams };
 }
 
 describe('Autocomplete', () => {
   let analyzer: Analyzer;
   before(async () => {
     analyzer = await Analyzer.initialize();
-  })
+  });
 
   it("cond", async () => {
-    const text = "cond"
+    const text = "cond";
     const position = Position.create(0, 4);
     const { didOpenTextDocumentParams, completionParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
@@ -41,7 +41,7 @@ describe('Autocomplete', () => {
   });
 
   it("conda in", async () => {
-    const text = "conda in"
+    const text = "conda in";
     const position = Position.create(0, 8);
     const { didOpenTextDocumentParams, completionParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
@@ -51,7 +51,7 @@ describe('Autocomplete', () => {
   });
 
   it("conda install", async () => {
-    const text = "conda install"
+    const text = "conda install";
     const position = Position.create(0, 14);
     const { didOpenTextDocumentParams, completionParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);

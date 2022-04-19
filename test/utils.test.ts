@@ -1,7 +1,7 @@
 import chai from "chai";
 import Parser from 'web-tree-sitter';
-import { Position, Range, uinteger, integer } from 'vscode-languageserver-types'
-import { TextDocument } from 'vscode-languageserver-textdocument'
+import { Position, Range, uinteger, integer } from 'vscode-languageserver-types';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { asPoint, asPosition, lineAt, contains, translate } from "../src/utils";
 
 
@@ -31,7 +31,7 @@ describe('Utils: Misc', () => {
   });
 
   it('lineAt', () => {
-    const content = "abyss\n  - nanachi\n  - riko\n  - regu"
+    const content = "abyss\n  - nanachi\n  - riko\n  - regu";
     const doc = TextDocument.create('baba', 'typescript', 2, content);
     const line = lineAt(doc, 1);
     assert.strictEqual(line, "  - nanachi\n");

@@ -28,7 +28,7 @@ export default class CommandFetcher {
       : `
       ---------------------------------------
         Memento has ${existing.length} specs
-      ---------------------------------------`
+      ---------------------------------------`;
     console.log(msg);
   }
 

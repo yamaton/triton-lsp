@@ -31,7 +31,7 @@ export class Memento {
 
   public getNames = (): string[] => {
     return this.db.prepare("select name from command").pluck().all();
-  }
+  };
 
 
   public get = (name: string): Command | undefined => {
@@ -45,20 +45,20 @@ export class Memento {
       this.cache[name] = cmd;
     }
     return cmd;
-  }
+  };
 
 
   public remove = (name: string): void => {
     this.db.prepare("delete from command where name=?").run(name);
     delete this.cache[name];
-    console.info(`Removed ${name} from the database.`)
-  }
+    console.info(`Removed ${name} from the database.`);
+  };
 
 
   public has = (name: string): boolean => {
     const ans = this.db.prepare("select name from command where name=?").pluck().get(name);
     return (!!ans);
-  }
+  };
 
 
   public set = (name: string, cmdSpec: Command): void => {
@@ -70,7 +70,7 @@ export class Memento {
       json: JSON.stringify(cmdSpec)
     });
     this.cache[name] = cmdSpec;
-  }
+  };
 
 
   public loadCommands = (): {[name: string]: Command} => {
@@ -81,11 +81,11 @@ export class Memento {
       d[cmd.name] = cmd;
     }
     return d;
-  }
+  };
 
   public close = (): void => {
     this.db.close();
     this.cache = {};
-  }
+  };
 
 }

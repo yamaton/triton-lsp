@@ -21,7 +21,7 @@ function prepare(text: string, position: Position, uri: string = "file://some/te
   const didOpenTextDocumentParams = { textDocument };
   const hoverParams = { position, textDocument: textDocumentIdentifier };
 
-  return { didOpenTextDocumentParams, hoverParams }
+  return { didOpenTextDocumentParams, hoverParams };
 }
 
 
@@ -32,11 +32,11 @@ describe('Hover', () => {
   let analyzer: Analyzer;
   before(async () => {
     analyzer = await Analyzer.initialize();
-  })
+  });
 
 
   it("conda install", async () => {
-    const text = "conda install"
+    const text = "conda install";
     const position = Position.create(0, 9);
     const expected = `conda **install**\n\n Installs a list of packages into a specified conda`;
 
@@ -52,7 +52,7 @@ describe('Hover', () => {
   });
 
   it("tar -xvf", async () => {
-    const text = "tar -xvf"
+    const text = "tar -xvf";
     const position = Position.create(0, 6);
     const expected = `\`-x\`, \`--extract\`, \`--get\`\n\n extract files from an archive\n\n\`-v\`, \`--verbose\`\n\n verbosely list files processed\n\n\`-f\`, \`--file\`\n\n use archive file or device ARCHIVE`;
     const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);

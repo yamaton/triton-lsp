@@ -1,13 +1,13 @@
 // https://github.com/rcjsuen/dockerfile-language-server-nodejs/blob/master/test/server.test.ts
 
-import chai from "chai";
+import * as chai from "chai";
 import * as child_process from "child_process";
-import { CompletionItem, CompletionList, DocumentUri, Hover, MarkupContent, MarkupKind, Position, TextDocumentItem } from 'vscode-languageserver-types'
-import type {
+import { CompletionItem, CompletionList, DocumentUri, Hover, MarkupContent, MarkupKind, Position, TextDocumentItem } from 'vscode-languageserver-types';
+import {
   ClientCapabilities, InitializeParams, NotificationMessage, RequestMessage, ResponseMessage,
-  DidOpenTextDocumentParams, CompletionParams, HoverParams, TextDocumentPositionParams
-} from 'vscode-languageserver-protocol'
-import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
+  DidOpenTextDocumentParams, CompletionParams, HoverParams, TextDocumentPositionParams,
+  TextDocumentSyncKind, InitializeResult
+} from 'vscode-languageserver-protocol';
 
 const assert = chai.assert;
 
@@ -67,8 +67,7 @@ function initialize(): number {
       }
     ],
     capabilities: clientCapabilities,
-  }
-
+  };
   return sendRequest(lspProcess, "initialize", params);
 }
 
@@ -86,7 +85,7 @@ function prepare(text: string, position: Position, uri: string = "file://some/te
   const didOpenTextDocumentParams = { textDocument };
   const textDocumentPositionParams = { position, textDocument: textDocumentIdentifier };
 
-  return [didOpenTextDocumentParams, textDocumentPositionParams]
+  return [didOpenTextDocumentParams, textDocumentPositionParams];
 }
 
 
@@ -141,7 +140,7 @@ describe("LSP Tests", () => {
         const result = json.result as CompletionItem[];
         if (!Array.isArray(result)) {
           assert.fail("[completion 1] Result is not an array.");
-        } else if (result.length == 0) {
+        } else if (result.length === 0) {
           assert.fail("[completion 1] completion item list is empty.");
         }
 
@@ -178,7 +177,7 @@ describe("LSP Tests", () => {
             assert.strictEqual(json.result.contents.value, expected);
             done();
           } else {
-            assert.fail("[hover 1] Expect hover to be MarkupContent.")
+            assert.fail("[hover 1] Expect hover to be MarkupContent.");
           }
         } else {
           assert.fail("[hover 1] result is not Hover.");

@@ -27,7 +27,7 @@ const acommand: Command = {
 };
 
 describe('Memento I/O', () => {
-  const testDbPath = "testtest.db"
+  const testDbPath = "testtest.db";
   if (fs.existsSync(testDbPath)) {
     fs.rmSync(testDbPath);
   }
