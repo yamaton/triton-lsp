@@ -34,8 +34,8 @@ const serverCapabilities: ServerCapabilities = {
   // referencesProvider: true,
 };
 
+const connection = LSP.createConnection();
 
-const connection = LSP.createConnection(LSP.ProposedFeatures.all);
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
 let hasConfigurationCapability = false;
