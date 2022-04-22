@@ -6,7 +6,6 @@
     "start": "tsc && node bin/main.js --stdio",
     "prepare": "tsc -b",
     "prepack": "tsc -b",
-    "preinstall": "tsc -b",
     "pretest": "tsc -b",
     "test": "mocha --require ts-node/register test/**/*.ts"
   },
