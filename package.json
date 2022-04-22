@@ -5,6 +5,8 @@
   "scripts": {
     "start": "tsc && node bin/main.js --stdio",
     "prepare": "tsc -b",
+    "prepack": "tsc -b",
+    "preinstall": "tsc -b",
     "pretest": "tsc -b",
     "test": "mocha --require ts-node/register test/**/*.ts"
   },
@@ -50,5 +52,11 @@
     "eslint": "^8.13.0",
     "mocha": "^9.2.2",
     "ts-node": "^10.7.0"
-  }
+  },
+  "files": [
+    "bin",
+    "out/src",
+    "commandspecs.db",
+    "tree-sitter-bash.wasm"
+  ]
 }
