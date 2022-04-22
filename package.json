@@ -53,13 +53,9 @@
     "ts-node": "^10.7.0"
   },
   "files": [
-<<<<<<< HEAD
     "bin",
     "out/src",
     "commandspecs.db",
     "tree-sitter-bash.wasm"
-=======
-    "out/src"
->>>>>>> f75877b (Add 'file' field to package.json)
   ]
 }
