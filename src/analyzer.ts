@@ -51,7 +51,7 @@ function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.Syntax
 // [FIXME] Do not rely on such an ugly hack
 function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Position): Position {
   const thisNode = getCurrentNode(root, position);
-  console.debug("[walkbackIfNeeded] thisNode.type: ", thisNode.type);
+  console.info("[walkbackIfNeeded] thisNode.type: ", thisNode.type);
   if (position.character > 0 && thisNode.type !== 'word') {
     console.info("[walkbackIfNeeded] stepping back!");
     return walkbackIfNeeded(document, root, translate(position, 0, -1));
