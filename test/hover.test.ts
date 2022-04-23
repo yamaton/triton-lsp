@@ -66,6 +66,24 @@ describe('Hover', () => {
     }
   });
 
+  it("curl --insecure", (done) => {
+    const text = "curl --insecure";
+    const position = Position.create(0, 10);
+    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+    const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);
+    analyzer.open(didOpenTextDocumentParams);
+    const hover = analyzer.provideHover(hoverParams);
+    hover.then((hov) => {
+      if (MarkupContent.is(hov.contents)) {
+        assert.strictEqual(hov.contents.kind, MarkupKind.Markdown);
+        assert.strictEqual(hov.contents.value, expected);
+        done();
+      } else {
+        assert.fail("hover.content is not MarkupContent.");
+      }
+    });
+  });
+
 
 });
 

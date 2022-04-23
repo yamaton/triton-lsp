@@ -36,6 +36,12 @@ const serverCapabilities: ServerCapabilities = {
 
 const connection = LSP.createConnection();
 
+// console.debug and console.log are the same
+// due to lack of connection.console.debug()
+console.log = connection.console.log.bind(connection.console);
+console.debug = connection.console.log.bind(connection.console);
+console.error = connection.console.error.bind(connection.console);
+
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise
 let analyzer: Analyzer;
 let hasConfigurationCapability = false;
@@ -44,6 +50,7 @@ let hasWorkspaceFolderCapability = false;
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   // Initialize analyzer here to resolve the promise of initializeParser()
+  connection.console.log("onInitialize()");
   analyzer = await Analyzer.initialize();
 
   // [FIXME] ignore client capabilities for now
@@ -58,7 +65,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
 
 connection.onInitialized(() => {
-  connection.console.log('initialized!');
+  connection.console.log('onInitialized!');
 
   if (hasConfigurationCapability) {
     connection.client.register(DidChangeConfigurationNotification.type, undefined);
@@ -72,27 +79,30 @@ connection.onInitialized(() => {
 
 
 connection.onDidOpenTextDocument((params: DidOpenTextDocumentParams) => {
+  connection.console.log("onDidOpenTextDocument!");
   analyzer.open(params);
 });
 
 
 connection.onDidCloseTextDocument((params: DidCloseTextDocumentParams) => {
+  connection.console.log("onDidCloseTextDocument!");
   analyzer.close(params);
 });
 
 
 connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
+  connection.console.log("onDidChangeTextDocument!");
   analyzer.update(params);
 });
 
 
 connection.onCompletion((params: CompletionParams) => {
-  // connection.console.log("completion!");
+  connection.console.log("onCompletion!");
   return analyzer.provideCompletion(params);
 });
 
 connection.onHover((params: HoverParams) => {
-  // connection.console.log("hover!");
+  connection.console.log("onHover!");
   return analyzer.provideHover(params);
 });
 
