@@ -36,10 +36,11 @@ const serverCapabilities: ServerCapabilities = {
 
 const connection = LSP.createConnection();
 
-// console.debug and console.log are the same
-// due to lack of connection.console.debug()
-console.log = connection.console.log.bind(connection.console);
+// console.debug is alias of console.log
 console.debug = connection.console.log.bind(connection.console);
+console.log = connection.console.log.bind(connection.console);
+console.info = connection.console.info.bind(connection.console);
+console.warn = connection.console.warn.bind(connection.console);
 console.error = connection.console.error.bind(connection.console);
 
 // analyzer is initialized within conneciton.onInitialize() to resolve a promise
