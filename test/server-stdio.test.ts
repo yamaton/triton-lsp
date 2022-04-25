@@ -3,16 +3,15 @@
 
 import chai from "chai";
 import * as child_process from "child_process";
-import { KeyObject } from "crypto";
-import { Response } from "node-fetch";
-import { InitializeResult, LogMessageNotification, LogMessageParams, NotificationMessage, ResponseMessage } from "vscode-languageserver-protocol";
+import { CompletionItem, Hover, MarkupContent, MarkupKind, Position } from "vscode-languageserver-types";
+import { DidOpenTextDocumentParams, InitializeResult, LogMessageNotification, LogMessageParams, NotificationMessage, ResponseMessage, TextDocumentPositionParams } from "vscode-languageserver-protocol";
 
 const assert = chai.assert;
 
 const lspProcess = child_process.spawn("node", ["out/src/server.js", "--stdio"]);
 let messageId = 1;
 
-function send(method: string, params: object) {
+function sendRequest(p: child_process.ChildProcessWithoutNullStreams, method: string, params: object) {
   const message = {
     jsonrpc: "2.0",
     id: messageId++,
@@ -22,12 +21,25 @@ function send(method: string, params: object) {
   const json = JSON.stringify(message);
   const headers = `Content-Length: ${json.length}\r\n\r\n`;
 
-  lspProcess.stdin.write(headers);
-  lspProcess.stdin.write(json);
+  p.stdin.write(headers);
+  p.stdin.write(json);
 }
 
-function initialize() {
-  send("initialize", {
+function sendNotification(p: child_process.ChildProcessWithoutNullStreams, method: string, params: object) {
+  const message = {
+    jsonrpc: "2.0",
+    method: method,
+    params: params
+  };
+  const json = JSON.stringify(message);
+  const headers = `Content-Length: ${json.length}\r\n\r\n`;
+
+  p.stdin.write(headers);
+  p.stdin.write(json);
+}
+
+function initialize(p: child_process.ChildProcessWithoutNullStreams) {
+  sendRequest(p, "initialize", {
     rootUri: process.cwd(),
     processId: process.pid,
     capabilities: {
@@ -81,6 +93,24 @@ function getLogMessage(msg: NotificationMessage): string | null {
 }
 
 
+function prepare(text: string, position: Position, uri: string = "file://some/text/document.sh"): [
+  DidOpenTextDocumentParams, TextDocumentPositionParams] {
+
+  const textDocument = {
+    uri,
+    languageId: "shellscript",
+    version: 2,
+    text
+  };
+  const textDocumentIdentifier = { uri };
+  const didOpenTextDocumentParams = { textDocument };
+  const textDocumentPositionParams = { position, textDocument: textDocumentIdentifier };
+
+  return [didOpenTextDocumentParams, textDocumentPositionParams];
+}
+
+
+
 describe('Connection Tests via --stdio', () => {
 
   // Terminate LSP
@@ -88,33 +118,153 @@ describe('Connection Tests via --stdio', () => {
     lspProcess.kill();
   });
 
+  // Event listeners must not interfere other tests
+  afterEach(() => {
+    lspProcess.removeAllListeners();
+  });
+
   it("initialize (stdio)", (done) => {
 
     lspProcess.stdout.on("data", (message) => {
       const msg = parse(message);
       if (!msg) {
-        console.log(`  -- (stdio) Got non-JSON: ${message}`);
+        console.log(`  -- (stdio initialize) non-JSON: ${message}`);
       } else if (isNotificationMessage(msg)) {
         if (isLogMessage(msg)) {
           const received = getLogMessage(msg);
-          console.log(`  -- (stdio) Got logMessage: ${received}`);
+          console.log(`  -- (stdio initialize) logMessage: ${received}`);
         } else {
-          console.log(`  -- (stdio) unknown notification: ${msg}`);
+          console.log(`  -- (stdio initialize) unknown notification: ${msg}`);
         }
       } else if (isResponseMessage(msg)) {
         if (hasInitializeResult(msg)) {
-          console.log(`  -- (stdio) Got InitializeResult`);
+          console.log(`  -- (stdio initialize) InitializeResult`);
           done();
         } else {
-          console.log(`  -- (stdio) unknown response: ${msg}`);
+          console.log(`  -- (stdio initialize) unknown response: ${msg}`);
         }
       } else {
-        console.log(`  -- (stdio) UNKNOWN: ${message}`);
+        console.log(`  -- (stdio initialize) UNKNOWN: ${message}`);
       }
     });
 
-    initialize();
+    initialize(lspProcess);
 
+  }).timeout(5000);
+
+
+
+  it("initialized", (done) => {
+
+    // catch a logMessage notification from the server
+    lspProcess.on('data', (message) => {
+      const msg = parse(message);
+      if (!msg) {
+        console.log(`  -- (stdio initialized) non-JSON: ${message}`);
+      }
+      else if (isNotificationMessage(msg)) {
+        if (isLogMessage(msg)) {
+          const logMessage = getLogMessage(msg);
+          console.log(`  -- (stdio initialized) logMessage: ${logMessage}`);
+          assert.strictEqual(logMessage, "onInitialized!");
+          done();
+        } else {
+          console.log(`  -- (stdio initialized) unknown notification: ${msg}`);
+        }
+      } else if (isResponseMessage(msg)) {
+        console.log(`  -- (stdio initialized) unknown response: ${msg.result}`);
+      } else {
+        console.log(`  -- (stdio initialized) UNKNOWN: ${msg}`);
+      }
+
+    });
+
+    sendNotification(lspProcess, "initialized", {});
+
+  });
+
+
+  it("completion 1", (done) => {
+    const text = "conda ins";
+    const position = Position.create(0, 9);
+    const uri = 'file:///conda/text.sh';
+    const [didOpenTextDocumentParams, completionParams1] = prepare(text, position, uri);
+    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
+    sendRequest(lspProcess, "textDocument/completion", completionParams1);
+
+    lspProcess.on("data", (message) => {
+      const json = parse(message);
+      if (!json) {
+        console.log(`  -- (stdio: comp) non-JSON: ${message}`);
+      } else if (isNotificationMessage(json)) {
+        if (isLogMessage(json)) {
+          console.log(`  -- (stdio: comp) logMessage: ${getLogMessage(json)} `);
+        } else {
+          console.log(`  -- (stdio: comp) Unknown notification: ${json.method}`);
+        }
+      } else if (isResponseMessage(json)) {
+        if (json.id) {
+          const result = json.result as CompletionItem[];
+          if (!Array.isArray(result)) {
+            assert.fail("  -- (stdio: comp) Result is not an array.");
+          } else if (result.length === 0) {
+            assert.fail("  -- (stdio: comp) completion item list is empty.");
+          }
+
+          const labels = result.map(item => item.label);
+          console.log(`  -- (stdio: comp) labels = ${labels}`);
+          done();
+        } else {
+          assert.fail(`  -- (stdio: comp) What is this id? ${json.id}`);
+        }
+      } else {
+        console.log(`  -- (stdio: comp) UNKNOWN: ${json}`);
+      }
+    });
+
+  }).timeout(5000);
+
+
+  it("hover 1", (done) => {
+    const text = "curl --insecure ";
+    const position = Position.create(0, 12);
+    const [didOpenTextDocumentParams, hoverParamsCom1] = prepare(text, position);
+    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+
+    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
+    sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
+
+    lspProcess.on("data", (message) => {
+      const json = parse(message);
+      if (!json) {
+        console.log(`  -- (stdio: hover) non-JSON: ${message}`);
+      } else if (isNotificationMessage(json)) {
+        if (isLogMessage(json)) {
+          console.log(`  -- (stdio: hover) logMessage: ${getLogMessage(json)} `);
+        } else {
+          console.log(`  -- (stdio: hover) Unknown notification: ${json.method}`);
+        }
+      } else if (isResponseMessage(json)) {
+        if (json.id) {
+          if (Hover.is(json.result)) {
+            if (MarkupContent.is(json.result.contents)) {
+              assert.strictEqual(json.result.contents.kind, MarkupKind.Markdown);
+              assert.strictEqual(json.result.contents.value, expected);
+              done();
+            } else {
+              assert.fail("  -- (stdio: hover) Expect hover to be MarkupContent.");
+            }
+          } else {
+            assert.fail("  -- (stdio: hover) result is not Hover.");
+          }
+        } else {
+          assert.fail(`  -- (stdio: hover) What is this id? ${json.id}`);
+        }
+      } else {
+        console.log(`  -- (stdio: hover) UNKNOWN: ${json}`);
+      }
+
+    });
   }).timeout(5000);
 
 });
