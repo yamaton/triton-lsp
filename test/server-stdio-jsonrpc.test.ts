@@ -91,7 +91,6 @@ describe('Connection via vscode-jsonrpc', () => {
     lspProcess.kill();
   });
 
-
   it("initialize + initialized + comp + hover (jsonrpc)", async () => {
 
     reader.listen((msg) => {

@@ -120,7 +120,7 @@ describe('Connection Tests via --stdio', () => {
 
   // Event listeners must not interfere other tests
   afterEach(() => {
-    lspProcess.removeAllListeners();
+    lspProcess.stdout.removeAllListeners();
   });
 
   it("initialize (stdio)", (done) => {
@@ -157,7 +157,7 @@ describe('Connection Tests via --stdio', () => {
   it("initialized", (done) => {
 
     // catch a logMessage notification from the server
-    lspProcess.on('data', (message) => {
+    lspProcess.stdout.on('data', (message) => {
       const msg = parse(message);
       if (!msg) {
         console.log(`  -- (stdio initialized) non-JSON: ${message}`);
@@ -192,7 +192,7 @@ describe('Connection Tests via --stdio', () => {
     sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
     sendRequest(lspProcess, "textDocument/completion", completionParams1);
 
-    lspProcess.on("data", (message) => {
+    lspProcess.stdout.on("data", (message) => {
       const json = parse(message);
       if (!json) {
         console.log(`  -- (stdio: comp) non-JSON: ${message}`);
@@ -231,10 +231,7 @@ describe('Connection Tests via --stdio', () => {
     const [didOpenTextDocumentParams, hoverParamsCom1] = prepare(text, position);
     const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
 
-    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
-    sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
-
-    lspProcess.on("data", (message) => {
+    lspProcess.stdout.on("data", (message) => {
       const json = parse(message);
       if (!json) {
         console.log(`  -- (stdio: hover) non-JSON: ${message}`);
@@ -250,6 +247,7 @@ describe('Connection Tests via --stdio', () => {
             if (MarkupContent.is(json.result.contents)) {
               assert.strictEqual(json.result.contents.kind, MarkupKind.Markdown);
               assert.strictEqual(json.result.contents.value, expected);
+              console.log(`  -- (stdio: hover) got expected: ${json.result.contents.value}`);
               done();
             } else {
               assert.fail("  -- (stdio: hover) Expect hover to be MarkupContent.");
@@ -265,6 +263,10 @@ describe('Connection Tests via --stdio', () => {
       }
 
     });
+
+    sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
+    sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
+
   }).timeout(5000);
 
 });
