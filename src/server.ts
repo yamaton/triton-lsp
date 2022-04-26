@@ -18,7 +18,7 @@ const serverCapabilities: ServerCapabilities = {
     // // This feature is still in proposed state for 3.17.0.
     // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
     completionItem: {
-      labelDetailsSupport: true
+      labelDetailsSupport: false,  // for now
     }
 
   },

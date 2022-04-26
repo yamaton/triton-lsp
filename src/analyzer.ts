@@ -300,6 +300,24 @@ export default class Analyzer {
 
   // Update both `this.trees` and `this.documents`
   public update(params: DidChangeTextDocumentParams): void {
+
+    // If the changes are incremental
+    if (params.contentChanges.every(TextDocumentContentChangeEvent.isIncremental)) {
+      this.updateWithIncremental(params);
+
+      // if the changes are full (just in case)
+    } else if (params.contentChanges.every(TextDocumentContentChangeEvent.isFull)) {
+      console.error("[Analyzer] DidChangeTextDocumentParams should NOT be Full");
+      this.updateWithFull(params);
+
+      // don't know what to do if both incremental and full changes are present.
+    } else {
+      console.error("[Analyzer] DidChangeTextDocumentParams has both Incremental and Full changes. Confused.");
+    }
+  }
+
+
+  updateWithIncremental(params: DidChangeTextDocumentParams): void {
     const uri = params.textDocument.uri;
     const oldTree = this.trees[uri];
     const oldDoc = this.documents[uri];
@@ -310,11 +328,30 @@ export default class Analyzer {
         const delta = getDelta(e, oldDoc);
         oldTree.edit(delta);
         edits.push({ range: e.range, newText: e.text });
+      } else {
+        console.error("[Analyzer] Should take Incremental changes.");
+        return;
       }
     }
     const newContent = TextDocument.applyEdits(oldDoc, edits);
     this.trees[uri] = this.parser.parse(newContent, oldTree);
 
+    const newDoc = TextDocument.create(oldDoc.uri, oldDoc.languageId, oldDoc.version, newContent);
+    this.documents[uri] = newDoc;
+  }
+
+
+  updateWithFull(params: DidChangeTextDocumentParams): void {
+    const lastEvent = params.contentChanges[params.contentChanges.length - 1];
+    if (TextDocumentContentChangeEvent.isIncremental(lastEvent)) {
+      console.error("[Analyzer] Should take Full changes.");
+      return;
+    }
+    const uri = params.textDocument.uri;
+    const oldDoc = this.documents[uri];
+
+    const newContent = lastEvent.text;
+    this.trees[uri] = this.parser.parse(newContent);
     const newDoc = TextDocument.create(oldDoc.uri, oldDoc.languageId, oldDoc.version, newContent);
     this.documents[uri] = newDoc;
   }
