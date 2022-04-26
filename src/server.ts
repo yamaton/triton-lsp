@@ -30,7 +30,7 @@ const serverCapabilities: ServerCapabilities = {
   // referencesProvider: true,
 };
 
-const connection = LSP.createConnection();
+const connection = LSP.createConnection(LSP.ProposedFeatures.all);
 
 // console.debug is alias of console.log
 console.debug = connection.console.log.bind(connection.console);
