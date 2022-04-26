@@ -9,21 +9,17 @@ import Analyzer from './analyzer';
 
 
 const serverCapabilities: ServerCapabilities = {
-  // For now we're using full-sync even though tree-sitter has great support
-  // for partial updates.
   textDocumentSync: TextDocumentSyncKind.Incremental,
   completionProvider: {
-    resolveProvider: true,
-    triggerCharacters: [' '],
+    resolveProvider: false,
 
     // // [FIXME]
     // // The following enables completion label details.
     // // This feature is still in proposed state for 3.17.0.
     // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
-    //
-    // completionItem: {
-    //   labelDetailsSupport: true
-    // }
+    completionItem: {
+      labelDetailsSupport: true
+    }
 
   },
   hoverProvider: true,
@@ -95,7 +91,6 @@ connection.onDidChangeTextDocument((params: DidChangeTextDocumentParams) => {
   connection.console.log("onDidChangeTextDocument!");
   analyzer.update(params);
 });
-
 
 connection.onCompletion((params: CompletionParams) => {
   connection.console.log("onCompletion!");

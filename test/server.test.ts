@@ -148,7 +148,7 @@ describe("LSP Tests", () => {
           const result = msg.result as InitializeResult;
           const capabilities = result.capabilities;
           assert.deepStrictEqual(capabilities.textDocumentSync, TextDocumentSyncKind.Incremental);
-          assert.strictEqual(capabilities.completionProvider?.resolveProvider, true);
+          assert.strictEqual(capabilities.completionProvider?.resolveProvider, false);
           assert.strictEqual(capabilities.hoverProvider, true);
           assert.strictEqual(capabilities.codeActionProvider, undefined);
           assert.strictEqual(capabilities.foldingRangeProvider, undefined);
