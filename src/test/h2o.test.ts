@@ -1,5 +1,5 @@
 import chai from "chai";
-import { runH2o } from "../src/h2o";
+import { runH2o } from "../h2o";
 
 const assert = chai.assert;
 

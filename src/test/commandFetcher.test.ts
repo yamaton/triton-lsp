@@ -1,6 +1,6 @@
 import chai from "chai";
-import { Command } from "../src/types";
-import CommandFetcher from "../src/commandFetcher";
+import { Command } from "../types";
+import CommandFetcher from "../commandFetcher";
 import fs from 'fs';
 
 const assert = chai.assert;

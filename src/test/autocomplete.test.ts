@@ -1,5 +1,5 @@
 import chai from "chai";
-import Analyzer from "../src/analyzer";
+import Analyzer from "../analyzer";
 import { Position } from "vscode-languageserver-types";
 import { CompletionParams, DidOpenTextDocumentParams } from "vscode-languageserver-protocol";
 

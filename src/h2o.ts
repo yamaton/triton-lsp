@@ -1,6 +1,7 @@
 import { Command } from './types';
 import { spawnSync } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 
 
 let neverNotifiedError = true;
@@ -9,9 +10,9 @@ let neverNotifiedError = true;
 // Call H2O executable and get command information from the local environment
 export function runH2o(name: string): Command | undefined {
   const h2opath = (process.platform === 'linux')
-            ? `bin/h2o-x86_64-unknown-linux`
+            ? path.join(__dirname, '..', 'bin', 'h2o-x86_64-unknown-linux')
             : (process.platform === 'darwin')
-            ? `bin/h2o-x86_64-apple-darwin`
+            ? path.join(__dirname, '..', 'bin', 'bin/h2o-x86_64-apple-darwin')
             : "";
   if (!h2opath) {
     if (neverNotifiedError) {
@@ -26,7 +27,7 @@ export function runH2o(name: string): Command | undefined {
     throw new Error(`h2o executable is not found`);
   }
 
-  const wrapperPath = `bin/wrap-h2o`;
+  const wrapperPath = path.join(__dirname, '..', 'bin', 'wrap-h2o');
   if (!fs.existsSync(wrapperPath)) {
     throw new Error(`warp-h2o is not found`);
   }

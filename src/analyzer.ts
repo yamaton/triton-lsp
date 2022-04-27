@@ -1,4 +1,5 @@
-import fs from 'fs';
+import * as fs from 'fs';
+import * as path from 'path';
 import Parser from 'web-tree-sitter';
 import type { SyntaxNode } from 'web-tree-sitter';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -20,11 +21,11 @@ type MyTextDocuments = { [uri: string]: TextDocument };
 async function initializeParser(): Promise<Parser> {
   await Parser.init();
   const parser = new Parser();
-  const path = `tree-sitter-bash.wasm`;
-  if (!fs.existsSync(path)) {
+  const wasmpath = path.join(__dirname, '..', 'tree-sitter-bash.wasm');
+  if (!fs.existsSync(wasmpath)) {
     throw new Error(`tree-sitter-bash.wasm is not found`);
   }
-  const lang = await Parser.Language.load(path);
+  const lang = await Parser.Language.load(wasmpath);
   parser.setLanguage(lang);
   return parser;
 }

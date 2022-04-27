@@ -1,10 +1,11 @@
 import BetterSqlite3 from 'better-sqlite3';
 import Database from 'better-sqlite3';
 import type { Command } from './types';
-import fs from 'fs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 
-const defaultDbPath = `commandspecs.db`;
+const defaultDbPath = path.join(__dirname, '..', 'commandspecs.db');
 
 // Memento is interface to sqlite3 database + cache as replacement to Memento in VS Code.
 export class Memento {

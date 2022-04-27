@@ -7,7 +7,7 @@
     "prepare": "tsc -b",
     "prepack": "tsc -b",
     "pretest": "tsc -b",
-    "test": "mocha --require ts-node/register test/**/*.ts"
+    "test": "mocha --require ts-node/register src/test/**/*.ts"
   },
   "repository": {
     "type": "git",
@@ -55,7 +55,8 @@
   },
   "files": [
     "bin",
-    "out/src",
+    "out",
+    "!out/test",
     "commandspecs.db",
     "tree-sitter-bash.wasm"
   ]

@@ -1,5 +1,5 @@
 import chai from "chai";
-import Analyzer from "../src/analyzer";
+import Analyzer from "../analyzer";
 import { MarkupContent, MarkupKind, Position } from "vscode-languageserver-types";
 import { HoverParams, DidOpenTextDocumentParams } from "vscode-languageserver-protocol";
 

@@ -9,7 +9,7 @@ import * as rpc from "vscode-jsonrpc/node";
 
 const assert = chai.assert;
 
-const lspProcess = child_process.spawn("node", ["out/src/server.js", "--stdio"]);
+const lspProcess = child_process.spawn("node", ["bin/main.js", "--stdio"]);
 const reader = new rpc.StreamMessageReader(lspProcess.stdout);
 const writer = new rpc.StreamMessageWriter(lspProcess.stdin);
 let messageId = 1;

@@ -8,7 +8,7 @@ import { DidOpenTextDocumentParams, InitializeResult, LogMessageNotification, Lo
 
 const assert = chai.assert;
 
-const lspProcess = child_process.spawn("node", ["out/src/server.js", "--stdio"]);
+const lspProcess = child_process.spawn("node", ["bin/main.js", "--stdio"]);
 let messageId = 1;
 
 function sendRequest(p: child_process.ChildProcessWithoutNullStreams, method: string, params: object) {
