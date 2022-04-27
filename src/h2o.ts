@@ -1,5 +1,6 @@
 import { Command } from './types';
 import { spawnSync } from 'child_process';
+import * as fs from 'fs';
 
 
 let neverNotifiedError = true;
@@ -14,14 +15,22 @@ export function runH2o(name: string): Command | undefined {
             : "";
   if (!h2opath) {
     if (neverNotifiedError) {
-      const msg = `Bundled help scanner (H2O) does not support ${process.platform}.`;
+      const msg = `The help scanner (H2O) does not support ${process.platform}.`;
       console.error(msg);
       neverNotifiedError = false;
     }
     return;
   }
 
+  if (!fs.existsSync(h2opath)) {
+    throw new Error(`h2o executable is not found`);
+  }
+
   const wrapperPath = `bin/wrap-h2o`;
+  if (!fs.existsSync(wrapperPath)) {
+    throw new Error(`warp-h2o is not found`);
+  }
+
   console.log(`[h2o.runH2o] spawning h2o: ${name}`);
   const proc = spawnSync(wrapperPath, [h2opath, name], { encoding: "utf8" });
   if (proc.status !== 0) {
