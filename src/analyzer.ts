@@ -153,13 +153,13 @@ function _getSubcommandCandidates(root: SyntaxNode, position: Position): string[
 
 
 // Get command arguments as string[]
-function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position): string[] {
+function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position, dropLast: boolean=false): string[] {
   const p = walkbackIfNeeded(document, root, position);
   let node = _getContextCommandNode(root, p)?.firstNamedChild;
   if (node?.text === 'sudo') {
     node = node.nextSibling;
   }
-  const res: string[] = [];
+  let res: string[] = [];
   while (node?.nextSibling) {
     node = node.nextSibling;
     let text = node.text;
@@ -168,6 +168,10 @@ function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: P
       text = text.split('=', 2)[0];
     }
     res.push(text);
+  }
+
+  if (dropLast && res.length) {
+    res = res.slice(0, -1);
   }
   return res;
 }
@@ -189,8 +193,8 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
 
 
 // Get option completion
-function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[]): CompletionItem[] {
-  const args = getContextCmdArgs(document, root, position);
+function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[], dropLast: boolean=false): CompletionItem[] {
+  const args = getContextCmdArgs(document, root, position, dropLast);
   const compitems: CompletionItem[] = [];
   const options = getOptions(cmdSeq);
   options.forEach((opt, idx) => {
@@ -209,6 +213,24 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
     }
   });
   return compitems;
+}
+
+
+// Get the word at given position
+function getThisWord(root: SyntaxNode, p: Position): string {
+  let node = _getContextCommandNode(root, p)?.firstNamedChild;
+  let res = (!!node) ? node.text : "";
+
+  while (node?.nextSibling) {
+    node = node.nextSibling;
+    let text = node.text;
+    // --option=arg
+    if (text.startsWith('--') && text.includes('=')) {
+      text = text.split('=', 2)[0];
+    }
+    res = text;
+  }
+  return res;
 }
 
 
@@ -406,13 +428,16 @@ export default class Analyzer {
 
     // this is an ugly hack to get current Node
     const p = walkbackIfNeeded(document, tree.rootNode, position);
+    const dropLast = (p === position);
+    console.info(`[Completion] position = (${position.line}, ${position.character})`);
+    console.info(`[Completion] p = (${p.line}, ${p.character})`);
 
     try {
-      const cmdSeq = await this.getContextCmdSeq(tree.rootNode, p);
+      let cmdSeq = await this.getContextCmdSeq(tree.rootNode, p, dropLast);
       if (!!cmdSeq && cmdSeq.length) {
         const deepestCmd = cmdSeq[cmdSeq.length - 1];
         const compSubcommands = getCompletionsSubcommands(deepestCmd);
-        const compOptions = getCompletionsOptions(document, tree.rootNode, p, cmdSeq);
+        const compOptions = getCompletionsOptions(document, tree.rootNode, p, cmdSeq, dropLast);
         return [
           ...compSubcommands,
           ...compOptions,
@@ -493,7 +518,8 @@ export default class Analyzer {
 
 
   // Get command and subcommand inferred from the current position
-  async getContextCmdSeq(root: SyntaxNode, position: Position): Promise<Command[]> {
+  async getContextCmdSeq(root: SyntaxNode, position: Position, dropLast: boolean=false): Promise<Command[]> {
+
     let name = getContextCommandName(root, position);
     if (!name) {
       return Promise.reject("[getContextCmdSeq] Command name not found.");
@@ -501,7 +527,7 @@ export default class Analyzer {
 
     try {
       let command = await this.fetcher.fetch(name);
-      const seq: Command[] = [command];
+      let seq: Command[] = [command];
       if (!!command) {
         const words = _getSubcommandCandidates(root, position);
         let found = true;
@@ -518,6 +544,13 @@ export default class Analyzer {
             }
           }
         }
+      }
+
+      // drop the last entry
+      if (dropLast && seq.length
+        && getThisWord(root, position) === seq[seq.length - 1].name) {
+        seq = seq.slice(0, -1);
+        console.info(`[Completion] dropLast: ${seq.map(x => x.name)}`);
       }
       return seq;
     } catch (e) {
