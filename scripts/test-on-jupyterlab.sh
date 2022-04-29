@@ -14,6 +14,20 @@
 #
 # -------------------------------------------------------------
 
+if [[ ! "$(command -v jupyter)" ]]; then
+  echo "jupyter is missing. Right env?"
+  exit 1
+fi
+
+if [[ ! "$(command -v node)" ]]; then
+  echo "jupyter is missing. Right env?"
+  exit 1
+fi
+
+if [[ "$(node --version | cut -d v -f 2 | cut -d . -f 1)" != "16" ]]; then
+  echo "node version is NOT 16: "$(node --version)""
+  exit 1
+fi
 
 target="$HOME/playground/jup"
 name="triton-lsp"
