@@ -58,6 +58,7 @@
     "out",
     "!out/test",
     "commandspecs.db",
-    "tree-sitter-bash.wasm"
+    "tree-sitter-bash.wasm",
+    "scripts/jupyter_server_config.py"
   ]
 }
