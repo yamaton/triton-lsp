@@ -153,7 +153,7 @@ function _getSubcommandCandidates(root: SyntaxNode, position: Position): string[
 
 
 // Get command arguments as string[]
-function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position, dropLast: boolean=false): string[] {
+function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position, dropLast: boolean = false): string[] {
   const p = walkbackIfNeeded(document, root, position);
   let node = _getContextCommandNode(root, p)?.firstNamedChild;
   if (node?.text === 'sudo') {
@@ -193,7 +193,7 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
 
 
 // Get option completion
-function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[], dropLast: boolean=false): CompletionItem[] {
+function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[], dropLast: boolean = false): CompletionItem[] {
   const args = getContextCmdArgs(document, root, position, dropLast);
   const compitems: CompletionItem[] = [];
   const options = getOptions(cmdSeq);
@@ -238,7 +238,7 @@ function getThisWord(root: SyntaxNode, p: Position): string {
 // [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
 function asCompletionItem(label: string, desc: string): CompletionItem {
   const compitem = CompletionItem.create(label);
-  compitem.detail = desc;
+  compitem.labelDetails = { description: desc };
   return compitem;
 }
 
@@ -518,7 +518,7 @@ export default class Analyzer {
 
 
   // Get command and subcommand inferred from the current position
-  async getContextCmdSeq(root: SyntaxNode, position: Position, dropLast: boolean=false): Promise<Command[]> {
+  async getContextCmdSeq(root: SyntaxNode, position: Position, dropLast: boolean = false): Promise<Command[]> {
 
     let name = getContextCommandName(root, position);
     if (!name) {
