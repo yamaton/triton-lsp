@@ -10,9 +10,9 @@ const defaultDbPath = path.join(__dirname, '..', 'commandspecs.db');
 // Memento is interface to sqlite3 database + cache as replacement to Memento in VS Code.
 export class Memento {
   private db: BetterSqlite3.Database;
-  private cache: {[name: string]: Command};
+  private cache: { [name: string]: Command };
 
-  constructor(path=defaultDbPath) {
+  constructor(path = defaultDbPath) {
     this.db = Memento.initializeDatabase(path);
     this.cache = this.loadCommands();
   }
@@ -64,8 +64,8 @@ export class Memento {
 
   public set = (name: string, cmdSpec: Command): void => {
     const stmt = (this.has(name))
-                  ? this.db.prepare("update command set json = @json where name = @name")
-                  : this.db.prepare("insert into command values (@name, @json)");
+      ? this.db.prepare("update command set json = @json where name = @name")
+      : this.db.prepare("insert into command values (@name, @json)");
     stmt.run({
       name: name,
       json: JSON.stringify(cmdSpec)
@@ -74,8 +74,8 @@ export class Memento {
   };
 
 
-  public loadCommands = (): {[name: string]: Command} => {
-    const d: {[name: string]: Command} = {};
+  public loadCommands = (): { [name: string]: Command } => {
+    const d: { [name: string]: Command } = {};
     const rawdata = this.db.prepare("select json from command").pluck().all();
     for (const raw of rawdata) {
       const cmd = JSON.parse(raw);

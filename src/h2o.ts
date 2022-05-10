@@ -10,10 +10,10 @@ let neverNotifiedError = true;
 // Call H2O executable and get command information from the local environment
 export function runH2o(name: string): Command | undefined {
   const h2opath = (process.platform === 'linux')
-            ? path.join(__dirname, '..', 'bin', 'h2o-x86_64-unknown-linux')
-            : (process.platform === 'darwin')
-            ? path.join(__dirname, '..', 'bin', 'bin/h2o-x86_64-apple-darwin')
-            : "";
+    ? path.join(__dirname, '..', 'bin', 'h2o-x86_64-unknown-linux')
+    : (process.platform === 'darwin')
+      ? path.join(__dirname, '..', 'bin', 'bin/h2o-x86_64-apple-darwin')
+      : "";
   if (!h2opath) {
     if (neverNotifiedError) {
       const msg = `The help scanner (H2O) does not support ${process.platform}.`;
