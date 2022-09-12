@@ -47,7 +47,7 @@ const clientCapabilities: ClientCapabilities = {
       completionItem: {
         documentationFormat: [MarkupKind.Markdown],
         snippetSupport: true,
-        // labelDetailSupport: true,    // [TODO] Enable since 3.17
+        labelDetailsSupport: true    // [TODO] Enable since 3.17
       }
     },
     hover: {

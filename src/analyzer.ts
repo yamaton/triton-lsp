@@ -238,9 +238,8 @@ function getThisWord(root: SyntaxNode, p: Position): string {
 // [FIXME] Want to pass vscode.CompletionItemLabel with {label: label, description: desc}
 function asCompletionItem(label: string, desc: string): CompletionItem {
   const compitem = CompletionItem.create(label);
+  compitem.detail = desc;
   compitem.documentation = desc;
-  // Requires support of LSP v3.17
-  compitem.labelDetails = { description: desc };
   return compitem;
 }
 

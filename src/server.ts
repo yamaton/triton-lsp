@@ -13,12 +13,12 @@ const serverCapabilities: ServerCapabilities = {
   completionProvider: {
     resolveProvider: false,
 
-    // // [FIXME]
-    // // The following enables completion label details.
-    // // This feature is still in proposed state for 3.17.0.
+    triggerCharacters: [' '],
+
+    // // The following enables completion label details, introduced in 3.17.0.
     // // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
     completionItem: {
-      labelDetailsSupport: false,  // for now
+      labelDetailsSupport: true,
     }
 
   },
