@@ -204,8 +204,9 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
         const item = asCompletionItem(name, opt.description);
         item.sortText = `55-${idx.toString().padStart(4)}`;
         if (opt.argument) {
-          const snippet = `${name} \$\{1:${opt.argument}\}`;
-          // [TODO] replace with item.textEdit = (something: TextEdit | InsertReplace)
+          // [TODO] Select depending on CompletionClientCapabilities.snippetSupport
+          // const snippet = `${name} \$\{1:${opt.argument}\}`;
+          const snippet = `${name} \<${opt.argument}\>`;
           item.insertText = snippet;
         }
         compitems.push(item);
