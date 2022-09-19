@@ -63,11 +63,11 @@ export default class CommandFetcher {
 
     let cached = this.getCache(name);
     if (cached) {
-      console.log('[CommandFetcher.fetch] Fetching from cache:', name);
+      console.log(`[CommandFetcher.fetch] Fetching from cache: ${name}`);
       return cached;
     }
 
-    console.log('[CommandFetcher.fetch] Fetching from H2O:', name);
+    console.log(`[CommandFetcher.fetch] Fetching from H2O: ${name}`);
     try {
       const command = runH2o(name);
       if (!command) {
@@ -77,12 +77,12 @@ export default class CommandFetcher {
       try {
         this.update(name, command);
       } catch (e) {
-        console.log("Failed to update: ", e);
+        console.log(`Failed to update: ${e}`);
       }
       return command;
 
     } catch (e) {
-      console.log("[CommandFetcher.fetch] Error:", e);
+      console.log(`[CommandFetcher.fetch] Error: ${e}`);
       return Promise.reject(`[CommandFetcher.fetch] Failed in CommandFetcher.update() with name = ${name}`);
     }
   }
@@ -113,7 +113,7 @@ export default class CommandFetcher {
         console.error(`Error body: ${errorBody}`);
         return Promise.reject("Failed to fetch HTTP response.");
       } catch (e) {
-        console.error('Error ... even failed to fetch error body: ', e);
+        console.error(`Error ... even failed to fetch error body: ${e}`);
         return Promise.reject("Failed to fetch over HTTP");
       }
     }
@@ -130,14 +130,14 @@ export default class CommandFetcher {
       const decoded = pako.inflate(s, { to: 'string' });
       commands = JSON.parse(decoded) as Command[];
     } catch (err) {
-      console.error("[fetchAllCurated] Error: ", err);
+      console.error(`[fetchAllCurated] Error: ${err}`);
       return Promise.reject("Failed to inflate and parse the content as JSON.");
     }
 
     const t2 = new Date();
     const diffUnpacking = t2.getTime() - t1.getTime();
     console.log(`[CommandFetcher.fetchAllCurated] (${kind}) Unpack took ${diffUnpacking} ms.`);
-    console.log("[CommandFetcher.fetchAllCurated] Done inflating and parsing. # of Commands = ", commands.length);
+    console.log(`[CommandFetcher.fetchAllCurated] Done inflating and parsing. # of Commands = ${commands.length}`);
 
     for (const cmd of commands) {
       if (isForcing || this.getCache(cmd.name) === undefined) {
@@ -170,7 +170,7 @@ export default class CommandFetcher {
         console.error(`Error body: ${errorBody}`);
         return Promise.reject("Failed to fetch HTTP response.");
       } catch (e) {
-        console.error('Error ... even failed to fetch error body: ', e);
+        console.error(`Error ... even failed to fetch error body: ${e}`);
         return Promise.reject("Failed to fetch over HTTP");
       }
     }
@@ -215,7 +215,7 @@ export default class CommandFetcher {
         console.error(`Error body: ${errorBody}`);
         return Promise.reject("Failed to fetch HTTP response.");
       } catch (e) {
-        console.error('Error ... even failed to fetch error body: ', e);
+        console.error(`Error ... even failed to fetch error body: ${e}`);
         return Promise.reject("Failed to fetch over HTTP");
       }
     }
@@ -230,7 +230,7 @@ export default class CommandFetcher {
       console.error(msg);
       return Promise.reject(msg);
     }
-    names.forEach((name) => console.log("    Received ", name));
+    names.forEach((name) => console.log(`    Received ${name}`));
     return names;
   }
 

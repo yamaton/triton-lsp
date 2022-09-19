@@ -52,7 +52,7 @@ function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.Syntax
 // [FIXME] Do not rely on such an ugly hack
 function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Position): Position {
   const thisNode = getCurrentNode(root, position);
-  console.info("[walkbackIfNeeded] thisNode.type: ", thisNode.type);
+  console.info(`[walkbackIfNeeded] thisNode.type: ${thisNode.type}`);
   if (position.character > 0 && thisNode.type !== 'word') {
     console.info("[walkbackIfNeeded] stepping back!");
     return walkbackIfNeeded(document, root, translate(position, 0, -1));
@@ -455,7 +455,7 @@ export default class Analyzer {
         console.info("[Completion] Only command completion is available (2)");
         return compCommands;
       }
-      console.warn("[Completion] No completion item is available (1)", e);
+      console.warn(`[Completion] No completion item is available (1) ${e}`);
       return Promise.reject("Error: No completion item is available");
     }
   }
@@ -514,7 +514,7 @@ export default class Analyzer {
         return Promise.reject(`[Hover] No command found.`);
       }
     } catch (e) {
-      console.log("[Hover] Error: ", e);
+      console.log(`[Hover] Error: ${e}`);
       return Promise.reject("No hover is available");
     }
   }
@@ -557,7 +557,7 @@ export default class Analyzer {
       }
       return seq;
     } catch (e) {
-      console.error("[getContextCmdSeq] Error:", e);
+      console.error(`[getContextCmdSeq] Error: ${e}`);
       return Promise.reject("[getContextCmdSeq] unknown command!");
     }
   }

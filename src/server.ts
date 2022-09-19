@@ -98,7 +98,7 @@ connection.onCompletion((params: CompletionParams) => {
 });
 
 connection.onHover((params: HoverParams) => {
-  connection.console.log("onHover!");
+  connection.console.log(`onHover!`);
   return analyzer.provideHover(params);
 });
 

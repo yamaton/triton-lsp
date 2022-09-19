@@ -46,9 +46,9 @@ export function runH2o(name: string): Command | undefined {
       console.log(`[h2o.runH2o] Got command output: ${command.name}`);
       return command;
     } else {
-      console.warn('[h2o.runH2o] Failed to parse H2O output as JSON: ', name);
+      console.warn(`[h2o.runH2o] Failed to parse H2O output as JSON: ${name}`);
     }
   } else {
-    console.warn('[h2o.runH2o] Failed to get H2O output: ', name);
+    console.warn(`[h2o.runH2o] Failed to get H2O output: ${name}`);
   }
 }
