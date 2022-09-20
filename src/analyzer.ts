@@ -462,13 +462,13 @@ export default class Analyzer {
 
 
   // Hover provider
-  public async provideHover(params: HoverParams): Promise<Hover> {
+  public async provideHover(params: HoverParams): Promise<Hover | null> {
     const uri = params.textDocument.uri;
     const document = this.documents[uri];
     const position = params.position;
     if (!this.parser) {
       console.error("[Hover] Parser is unavailable!");
-      return Promise.reject("Parser is unavailable!");
+      return null;
     }
 
     if (!this.trees[uri]) {
@@ -508,14 +508,16 @@ export default class Analyzer {
           const msg = optsToMessage(opts);
           return asHover(msg);
         } else {
-          return Promise.reject(`No hover is available for ${currentWord}`);
+          console.log(`No hover is available for ${currentWord}`);
+          return null;
         }
       } else {
-        return Promise.reject(`[Hover] No command found.`);
+        console.log(`[Hover] No command found.`);
+        return null;
       }
     } catch (e) {
       console.log(`[Hover] Error: ${e}`);
-      return Promise.reject("No hover is available");
+      return null;
     }
   }
 
@@ -525,7 +527,8 @@ export default class Analyzer {
 
     let name = getContextCommandName(root, position);
     if (!name) {
-      return Promise.reject("[getContextCmdSeq] Command name not found.");
+      console.log("[getContextCmdSeq] Command name not found.");
+      return [];
     }
 
     try {
@@ -557,8 +560,8 @@ export default class Analyzer {
       }
       return seq;
     } catch (e) {
-      console.error(`[getContextCmdSeq] Error: ${e}`);
-      return Promise.reject("[getContextCmdSeq] unknown command!");
+      console.error(`[getContextCmdSeq] unknown command: ${e}`);
+      return [];
     }
   }
 }

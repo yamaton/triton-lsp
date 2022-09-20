@@ -43,7 +43,7 @@ describe('Hover', () => {
     const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
     const hover = await analyzer.provideHover(hoverParams);
-    if (MarkupContent.is(hover.contents)) {
+    if (!!hover && MarkupContent.is(hover.contents)) {
       assert.strictEqual(hover.contents.kind, MarkupKind.Markdown);
       assert.strictEqual(hover.contents.value, expected);
     } else {
@@ -58,7 +58,7 @@ describe('Hover', () => {
     const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
     const hover = await analyzer.provideHover(hoverParams);
-    if (MarkupContent.is(hover.contents)) {
+    if (!!hover && MarkupContent.is(hover.contents)) {
       assert.strictEqual(hover.contents.kind, MarkupKind.Markdown);
       assert.strictEqual(hover.contents.value, expected);
     } else {
@@ -74,7 +74,7 @@ describe('Hover', () => {
     analyzer.open(didOpenTextDocumentParams);
     const hover = analyzer.provideHover(hoverParams);
     hover.then((hov) => {
-      if (MarkupContent.is(hov.contents)) {
+      if (!!hov && MarkupContent.is(hov.contents)) {
         assert.strictEqual(hov.contents.kind, MarkupKind.Markdown);
         assert.strictEqual(hov.contents.value, expected);
         done();
