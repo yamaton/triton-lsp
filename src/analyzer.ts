@@ -3,7 +3,7 @@ import * as path from 'path';
 import Parser from 'web-tree-sitter';
 import type { SyntaxNode } from 'web-tree-sitter';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Position, Range, TextEdit, CompletionItem, Hover } from 'vscode-languageserver-types';
+import { Position, Range, TextEdit, CompletionItem, Hover, CompletionItemKind } from 'vscode-languageserver-types';
 import {
   TextDocumentContentChangeEvent, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
   DidCloseTextDocumentParams, CompletionParams, HoverParams
@@ -182,7 +182,7 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
   const subcommands = getSubcommandsWithAliases(deepestCmd);
   if (subcommands && subcommands.length) {
     const compitems = subcommands.map((sub, idx) => {
-      const item = asCompletionItem(sub.name, sub.description);
+      const item = asCompletionItem(sub.name, sub.description, CompletionItemKind.Module);
       item.sortText = `33-${idx.toString().padStart(4)}`;
       return item;
     });
@@ -201,7 +201,7 @@ function getCompletionsOptions(document: TextDocument, root: SyntaxNode, positio
     // suppress already-used options
     if (opt.names.every(name => !args.includes(name))) {
       opt.names.forEach(name => {
-        const item = asCompletionItem(name, opt.description);
+        const item = asCompletionItem(name, opt.description, CompletionItemKind.Field);
         item.sortText = `55-${idx.toString().padStart(4)}`;
         if (opt.argument) {
           // [TODO] Select depending on CompletionClientCapabilities.snippetSupport
@@ -236,9 +236,10 @@ function getThisWord(root: SyntaxNode, p: Position): string {
 
 
 // To CompletionItem
-function asCompletionItem(label: string, desc: string): CompletionItem {
+function asCompletionItem(label: string, desc: string, kind: CompletionItemKind): CompletionItem {
   const compitem = CompletionItem.create(label);
   compitem.detail = desc;
+  compitem.kind = kind;
 
   // [TODO] Requires support of LSP v3.17
   // compitem.labelDetails = { description: desc };
@@ -426,7 +427,12 @@ export default class Analyzer {
     const commandList = this.fetcher.getNames();
     let compCommands: CompletionItem[] = [];
     if (!!commandList) {
-      compCommands = commandList.map((s) => CompletionItem.create(s));
+      compCommands = commandList.map((s) => {
+        const item = CompletionItem.create(s);
+        // [TODO] Add one-line command info as .detail
+        item.kind = CompletionItemKind.Class;
+        return item;
+      });
     }
 
     // this is an ugly hack to get current Node
