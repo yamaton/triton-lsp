@@ -10,7 +10,7 @@ import {
 } from 'vscode-languageserver-protocol';
 import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
-import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage } from './utils';
+import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage, isPrefixOf } from './utils';
 
 
 type Trees = { [uri: string]: Parser.Tree };
@@ -457,9 +457,11 @@ export default class Analyzer {
     } catch (e) {
       const currentWord = getCurrentNode(tree.rootNode, position).text;
       console.info(`[Completion] currentWord = ${currentWord}`);
-      if (!!compCommands && p === position && currentWord.length >= 3) {
+      if (!!compCommands && p === position && currentWord.length >= 2) {
         console.info("[Completion] Only command completion is available (2)");
-        return compCommands;
+
+        // [TODO] Is fuzzy matching the better?
+        return compCommands.filter(cmd => isPrefixOf(currentWord, cmd.label));
       }
       console.warn(`[Completion] No completion item is available (1) ${e}`);
       return Promise.reject("Error: No completion item is available");

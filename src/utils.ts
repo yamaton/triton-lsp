@@ -115,3 +115,13 @@ export function asHover(value: string): Hover {
   return res;
 }
 
+
+// check if string a is prefix of b
+export function isPrefixOf(left: string, right: string): boolean {
+  const lengthLeft = left.length;
+  const lengthRight = right.length;
+  if (lengthLeft > lengthRight) {
+      return false;
+    }
+  return (left === right.substring(0, lengthLeft));
+}
