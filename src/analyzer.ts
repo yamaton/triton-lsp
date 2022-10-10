@@ -46,10 +46,13 @@ function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.Syntax
 }
 
 
-// Moves the position left by one character IF position is contained only in the root-node range.
-// This is just a workround as you cannot reach command node if you start from
-// the position, say, after 'echo '
-// [FIXME] Do not rely on such an ugly hack
+// Moves the position backward (left or previous line)
+// until the cursor reaches 'word' node.
+//
+// If a cursor starts from (0, 5) of the text "abc  ",
+// walkbackIfNeeded() will return the position (0, 3)
+// which is right after "abc".
+//
 function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Position): Position {
   const thisNode = getCurrentNode(root, position);
   console.info(`[walkbackIfNeeded] thisNode.type: ${thisNode.type}`);
@@ -72,6 +75,8 @@ function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Po
 function isRightAfterOptionLike(root: SyntaxNode, position: Position): boolean {
   const word = getThisWord(root, position);
   const res = word.startsWith('-');
+  console.info(`[isRightAfterOptionLike] word: ${word}`);
+  console.info(`[isRightAfterOptionLike] res: ${res}`);
   return res;
 }
 
@@ -204,7 +209,7 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
 function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[], dropLast: boolean = false): CompletionItem[] {
   const isCursorRightAfterWhitespace = !dropLast;
   if (!isCursorRightAfterWhitespace && !isRightAfterOptionLike(root, position)) {
-    console.log("[Completion] no options provided because of preceding characters");
+    console.log("[Completion] no options provided because of surrounding characters");
     return [];
   }
 
@@ -429,6 +434,9 @@ export default class Analyzer {
     const document = this.documents[uri];
     const position = params.position;
 
+    console.log(`[Completion] document.getText(): ${document.getText()}`);
+    console.log(`[Completion] given position: (${position.line}, ${position.character})`);
+
     if (!this.parser) {
       console.error("[Completion] Parser is unavailable!");
       return Promise.reject("Parser unavailable!");
@@ -451,9 +459,9 @@ export default class Analyzer {
 
     // this is an ugly hack to get current Node
     const p = walkbackIfNeeded(document, tree.rootNode, position);
+    console.log(`[Completion] after walkback: (${p.line}, ${p.character})`);
     const dropLast = (p === position);
-    console.info(`[Completion] position = (${position.line}, ${position.character})`);
-    console.info(`[Completion] p = (${p.line}, ${p.character})`);
+    console.log(`[Completion] dropLast: ${dropLast}`);
 
     try {
       let cmdSeq = await this.getContextCmdSeq(tree.rootNode, p, dropLast);
