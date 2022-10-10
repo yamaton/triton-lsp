@@ -236,10 +236,10 @@ describe("LSP Tests", () => {
 
 
   it("hover 1", (done) => {
-    const text = "curl --insecure ";
+    const text = "cut --delimiter ',' -f 1 ";
     const position = Position.create(0, 12);
     const [didOpenTextDocumentParams, hoverParamsCom1] = prepare(text, position);
-    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+    const expected = "\`-d\`, \`--delimiter\` \`DELIM\`\n\n use DELIM instead of TAB for field delimiter";
 
     sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
     const id = sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);

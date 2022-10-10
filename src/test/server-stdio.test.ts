@@ -222,14 +222,14 @@ describe('Connection Tests via --stdio', () => {
       }
     });
 
-  }).timeout(5000);
+  }).timeout(10000);
 
 
   it("hover 1", (done) => {
-    const text = "curl --insecure ";
+    const text = "cut --delimiter , -f 1 ";
     const position = Position.create(0, 12);
     const [didOpenTextDocumentParams, hoverParamsCom1] = prepare(text, position);
-    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+    const expected = "\`-d\`, \`--delimiter\` \`DELIM\`\n\n use DELIM instead of TAB for field delimiter";
 
     lspProcess.stdout.on("data", (message) => {
       const json = parse(message);
@@ -267,6 +267,6 @@ describe('Connection Tests via --stdio', () => {
     sendNotification(lspProcess, "textDocument/didOpen", didOpenTextDocumentParams);
     sendRequest(lspProcess, "textDocument/hover", hoverParamsCom1);
 
-  }).timeout(5000);
+  }).timeout(10000);
 
 });
