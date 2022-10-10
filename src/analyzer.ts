@@ -73,7 +73,7 @@ function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Po
 
 // Check if the cursor is right after option-like string
 function isRightAfterOptionLike(root: SyntaxNode, position: Position): boolean {
-  const word = getThisWord(root, position);
+  const word = getCurrentNode(root, position).text;
   const res = word.startsWith('-');
   console.info(`[isRightAfterOptionLike] word: ${word}`);
   console.info(`[isRightAfterOptionLike] res: ${res}`);
