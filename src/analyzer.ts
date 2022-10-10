@@ -68,6 +68,14 @@ function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Po
 }
 
 
+// Check if the cursor is right after option-like string
+function isRightAfterOptionLike(root: SyntaxNode, position: Position): boolean {
+  const word = getThisWord(root, position);
+  const res = word.startsWith('-');
+  return res;
+}
+
+
 // Returns current word as an option if the tree-sitter says so
 function getMatchingOption(currentWord: string, cmdSeq: Command[]): Option[] {
   const thisName = currentWord.split('=', 2)[0];
@@ -194,6 +202,12 @@ function getCompletionsSubcommands(deepestCmd: Command): CompletionItem[] {
 
 // Get option completion
 function getCompletionsOptions(document: TextDocument, root: SyntaxNode, position: Position, cmdSeq: Command[], dropLast: boolean = false): CompletionItem[] {
+  const isCursorRightAfterWhitespace = !dropLast;
+  if (!isCursorRightAfterWhitespace && !isRightAfterOptionLike(root, position)) {
+    console.log("[Completion] no options provided because of preceding characters");
+    return [];
+  }
+
   const args = getContextCmdArgs(document, root, position, dropLast);
   const compitems: CompletionItem[] = [];
   const options = getOptions(cmdSeq);
