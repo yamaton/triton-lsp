@@ -2,7 +2,7 @@ import chai from "chai";
 import Parser from 'web-tree-sitter';
 import { Position, Range, uinteger, integer } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { asPoint, asPosition, lineAt, contains, translate } from "../utils";
+import { asPoint, asPosition, lineAt, contains, translate, isSubsequenceOf } from "../utils";
 
 
 const assert = chai.assert;
@@ -76,6 +76,70 @@ describe('Utils: Misc', () => {
     const p = Position.create(1, 5);
     const expected = Position.create(3, uinteger.MAX_VALUE);
     assert.deepEqual(expected, translate(p, 2, integer.MAX_VALUE));
+  });
+
+  it('isSubsequenceOf 0', () => {
+    const token = "";
+    const text = "abc";
+    const expected = isSubsequenceOf(token, text);
+    assert.isTrue(expected);
+  });
+
+
+  it('isSubsequenceOf 1', () => {
+    const token = "a";
+    const text = "";
+    const expected = isSubsequenceOf(token, text);
+    assert.isFalse(expected);
+  });
+
+  it('isSubsequenceOf 2', () => {
+    const token = "ac";
+    const text = "abc";
+    const expected = isSubsequenceOf(token, text);
+    assert.isTrue(expected);
+  });
+
+  it('isSubsequenceOf 3', () => {
+    const token = "aaa";
+    const text = "aabba";
+    const expected = isSubsequenceOf(token, text);
+    assert.isTrue(expected);
+  });
+
+  it('isSubsequenceOf 4', () => {
+    const token = "xyzzy";
+    const text = "xyzzy";
+    const expected = isSubsequenceOf(token, text);
+    assert.isTrue(expected);
+  });
+
+  it('isSubsequenceOf 5', () => {
+    const token = "abc";
+    const text = "cba";
+    const expected = isSubsequenceOf(token, text);
+    assert.isFalse(expected);
+  });
+
+  it('isSubsequenceOf 6', () => {
+    const token = "abcde";
+    const text = "bcde";
+    const expected = isSubsequenceOf(token, text);
+    assert.isFalse(expected);
+  });
+
+  it('isSubsequenceOf 7', () => {
+    const token = "abc";
+    const text = "";
+    const expected = isSubsequenceOf(token, text);
+    assert.isFalse(expected);
+  });
+
+  it('isSubsequenceOf edge', () => {
+    const token = "";
+    const text = "";
+    const expected = isSubsequenceOf(token, text);
+    assert.isTrue(expected);
   });
 
 });

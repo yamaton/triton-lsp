@@ -10,7 +10,7 @@ import {
 } from 'vscode-languageserver-protocol';
 import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
-import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage, isPrefixOf } from './utils';
+import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage, isPrefixOf, isSubsequenceOf } from './utils';
 
 
 type Trees = { [uri: string]: Parser.Tree };
@@ -76,7 +76,6 @@ function isRightAfterOptionLike(root: SyntaxNode, position: Position): boolean {
   const word = getCurrentNode(root, position).text;
   const res = word.startsWith('-');
   console.info(`[isRightAfterOptionLike] word: ${word}`);
-  console.info(`[isRightAfterOptionLike] res: ${res}`);
   return res;
 }
 
@@ -469,21 +468,28 @@ export default class Analyzer {
         const deepestCmd = cmdSeq[cmdSeq.length - 1];
         const compSubcommands = getCompletionsSubcommands(deepestCmd);
         const compOptions = getCompletionsOptions(document, tree.rootNode, p, cmdSeq, dropLast);
-        return [
+        let compItems = [
           ...compSubcommands,
           ...compOptions,
         ];
+
+        // select subsequence-matched completion
+        if (dropLast) {
+          const token = getCurrentNode(tree.rootNode, position).text;
+          compItems = compItems.filter(compItem => isSubsequenceOf(token, compItem.label));
+        }
+        return compItems;
       } else {
         throw new Error("unknown command");
       }
     } catch (e) {
-      const currentWord = getCurrentNode(tree.rootNode, position).text;
-      console.info(`[Completion] currentWord = ${currentWord}`);
-      if (!!compCommands && p === position && currentWord.length >= 2) {
+      const currentToken = getCurrentNode(tree.rootNode, position).text;
+      console.info(`[Completion] currentToken = ${currentToken}`);
+      if (!!compCommands && p === position && currentToken.length >= 2) {
         console.info("[Completion] Only command completion is available (2)");
 
-        // [TODO] Is fuzzy matching the better?
-        return compCommands.filter(cmd => isPrefixOf(currentWord, cmd.label));
+        // [TODO] Is fuzzy (subsequence) matching the better?
+        return compCommands.filter(cmd => isPrefixOf(currentToken, cmd.label));
       }
       console.warn(`[Completion] No completion item is available (1) ${e}`);
       return Promise.reject("Error: No completion item is available");

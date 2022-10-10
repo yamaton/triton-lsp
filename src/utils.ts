@@ -125,3 +125,31 @@ export function isPrefixOf(left: string, right: string): boolean {
   }
   return (left === right.substring(0, lengthLeft));
 }
+
+
+// check if token is subsequence of the text
+export function isSubsequenceOf(token: string, text: string): boolean {
+
+  // check if a letter c is found in the substring token[textIndex: ]
+  // returns the index if found. Otherwise -1.
+  const findIndex = (c: string, textIndex: number): number => {
+    for (let i = textIndex; i < text.length; i++) {
+      if (c === text[i]) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  let textIndex = 0;
+  const cs = [...token];
+  for (let i = 0; i < cs.length; i++) {
+    const c = cs[i];
+    const res = findIndex(c, textIndex);
+    if (res === -1) {
+      return false;
+    }
+    textIndex = res + 1;
+  }
+  return true;
+}
