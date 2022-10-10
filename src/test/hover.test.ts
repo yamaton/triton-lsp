@@ -38,7 +38,7 @@ describe('Hover', () => {
   it("conda install", async () => {
     const text = "conda install";
     const position = Position.create(0, 9);
-    const expected = `conda **install**\n\n Installs a list of packages into a specified conda`;
+    const expected = `conda **install**\n\n Installs a list of packages into a specified conda environment.`;
 
     const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
@@ -66,10 +66,10 @@ describe('Hover', () => {
     }
   });
 
-  it("curl --insecure", (done) => {
-    const text = "curl --insecure";
+  it("cut --delimiter", (done) => {
+    const text = "curl --delimiter ',' -f 1";
     const position = Position.create(0, 10);
-    const expected = "\`-k\`, \`--insecure\` \n\n Allow insecure server connections when using SSL";
+    const expected = "\`-d\`, \`--delimiter\` `DELIM`\n\n  use DELIM instead of TAB for field delimiter";
     const { didOpenTextDocumentParams, hoverParams } = prepare(text, position);
     analyzer.open(didOpenTextDocumentParams);
     const hover = analyzer.provideHover(hoverParams);
