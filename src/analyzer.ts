@@ -517,7 +517,9 @@ export default class Analyzer {
     }
     const tree = this.trees[uri];
 
-    const currentWord = getCurrentNode(tree.rootNode, position).text;
+    const currentNode = getCurrentNode(tree.rootNode, position)
+    const currentWord = currentNode.text;
+    const currentRange = asRange(currentNode);
     try {
       const cmdSeq = await this.getContextCmdSeq(tree.rootNode, position);
       if (!!cmdSeq && cmdSeq.length) {
@@ -527,7 +529,7 @@ export default class Analyzer {
           const tldrText = (!!thisCmd.tldr) ? "\n" + formatTldr(thisCmd.tldr) : "";
           const msg = `\`${name}\`` + tldrText;
           // msg.isTrusted = true;      // [FIXME] Need this property in LSP
-          return asHover(msg);
+          return asHover(msg, currentRange);
 
         } else if (cmdSeq.length > 1 && cmdSeq.some((cmd) => cmd.name === currentWord)) {
           const thatCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
@@ -541,12 +543,12 @@ export default class Analyzer {
           }
           const cmdPrefixName = nameSeq.join(" ");
           const msg = `${cmdPrefixName} **${thatCmd.name}**\n\n ${thatCmd.description}`;
-          return asHover(msg);
+          return asHover(msg, currentRange);
 
         } else if (cmdSeq.length) {
           const opts = getMatchingOption(currentWord, cmdSeq);
           const msg = optsToMessage(opts);
-          return asHover(msg);
+          return asHover(msg, currentRange);
         } else {
           console.log(`No hover is available for ${currentWord}`);
           return null;

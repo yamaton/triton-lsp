@@ -107,10 +107,11 @@ function markup(value: string): MarkupContent {
 
 
 // string -> Hover
-export function asHover(value: string): Hover {
+export function asHover(value: string, range?: Range): Hover {
   const msg = markup(value);
   const res: Hover = {
-    contents: msg
+    contents: msg,
+    range
   };
   return res;
 }
