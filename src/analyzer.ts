@@ -56,6 +56,10 @@ function getCurrentNode(n: Parser.SyntaxNode, position: Position): Parser.Syntax
 function walkbackIfNeeded(document: TextDocument, root: SyntaxNode, position: Position): Position {
   const thisNode = getCurrentNode(root, position);
   console.info(`[walkbackIfNeeded] thisNode.type: ${thisNode.type}`);
+  if (thisNode.type === ';') {
+    console.info("[walkbackIfNeeded] stop at semicolon.");
+    return position;
+  }
   if (position.character > 0 && thisNode.type !== 'word') {
     console.info("[walkbackIfNeeded] stepping back!");
     return walkbackIfNeeded(document, root, translate(position, 0, -1));
