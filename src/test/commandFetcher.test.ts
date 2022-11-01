@@ -21,7 +21,7 @@ describe('CommandFetcher with empty DB', () => {
     const name = 'h2o';
     const cmd = await fetcher.fetch(name);
     const opt = cmd?.options.find(opt => opt.names.some(n => n === '--list-subcommands'));
-    assert.strictEqual(opt?.description, "List subcommands");
+    assert.strictEqual(opt?.description, "[Debug] List subcommands");
   });
 
   it("fetcher.fetchAllCurated('general')", async () => {
