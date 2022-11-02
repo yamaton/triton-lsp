@@ -10,7 +10,7 @@ import {
 } from 'vscode-languageserver-protocol';
 import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
-import { contains, asRange, translate, lineAt, asPoint, formatTldr, asHover, optsToMessage, isPrefixOf, isSubsequenceOf } from './utils';
+import { contains, asRange, translate, lineAt, asPoint, formatTldr, formatUsage, asHover, optsToMessage, isPrefixOf, isSubsequenceOf } from './utils';
 
 
 type Trees = { [uri: string]: Parser.Tree };
@@ -525,13 +525,16 @@ export default class Analyzer {
       if (!!cmdSeq && cmdSeq.length) {
         const name = cmdSeq[0].name;
         if (currentWord === name) {
+          // Display root-level command
           const thisCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
-          const tldrText = (!!thisCmd.tldr) ? "\n" + formatTldr(thisCmd.tldr) : "";
-          const msg = `\`${name}\`` + tldrText;
+          const usageText = formatUsage(thisCmd.usage);
+          const tldrText = formatTldr(thisCmd.tldr);
+          const msg = `\`${name}\`${usageText}${tldrText}`;
           // msg.isTrusted = true;      // [FIXME] Need this property in LSP
           return asHover(msg, currentRange);
 
         } else if (cmdSeq.length > 1 && cmdSeq.some((cmd) => cmd.name === currentWord)) {
+          // Display a subcommand
           const thatCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
           const nameSeq: string[] = [];
           for (const cmd of cmdSeq) {
@@ -542,10 +545,12 @@ export default class Analyzer {
             }
           }
           const cmdPrefixName = nameSeq.join(" ");
-          const msg = `${cmdPrefixName} **${thatCmd.name}**\n\n ${thatCmd.description}`;
+          const usageText = formatUsage(thatCmd.usage);
+          const msg = `${cmdPrefixName} **${thatCmd.name}**\n\n${thatCmd.description}${usageText}`;
           return asHover(msg, currentRange);
 
         } else if (cmdSeq.length) {
+          // Display an option
           const opts = getMatchingOption(currentWord, cmdSeq);
           const msg = optsToMessage(opts);
           return asHover(msg, currentRange);
