@@ -517,7 +517,7 @@ export default class Analyzer {
     }
     const tree = this.trees[uri];
 
-    const currentNode = getCurrentNode(tree.rootNode, position)
+    const currentNode = getCurrentNode(tree.rootNode, position);
     const currentWord = currentNode.text;
     const currentRange = asRange(currentNode);
     try {

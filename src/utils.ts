@@ -88,9 +88,9 @@ export function formatUsage(text: string | undefined): string {
   }
   const trimmed = text.trim();
   const xs = trimmed.split("\n", 2);
-  const formatted = (xs.length == 1) ?
+  const formatted = (xs.length === 1) ?
     `Usage: \`${trimmed}\`` :
-    `Usage:\n\`\`\`\n${trimmed}\n\`\`\`\n`
+    `Usage:\n\`\`\`\n${trimmed}\n\`\`\`\n`;
   return `\n\n${formatted}`;
 }
 
@@ -157,7 +157,7 @@ export function isSubsequenceOf(token: string, text: string): boolean {
       }
     }
     return -1;
-  }
+  };
 
   let textIndex = 0;
   const cs = [...token];
