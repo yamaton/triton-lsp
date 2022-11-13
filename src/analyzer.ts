@@ -146,7 +146,7 @@ function getContextCommandName(root: SyntaxNode, position: Position): string | u
   if (name === 'sudo') {
     name = commandNode?.firstNamedChild?.nextSibling?.text!;
   }
-  return name;
+  return path.basename(name);
 }
 
 
