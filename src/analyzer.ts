@@ -143,7 +143,7 @@ function getContextCommandName(root: SyntaxNode, position: Position): string | u
   // if you are at a command, a named node, the currentNode becomes one-layer deeper than other nameless nodes.
   const commandNode = _getContextCommandNode(root, position);
   let name = commandNode?.firstNamedChild?.text!;
-  if (name === 'sudo') {
+  if (name === 'sudo' || name === 'nohup') {
     name = commandNode?.firstNamedChild?.nextSibling?.text!;
   }
   return name;
@@ -172,7 +172,7 @@ function _getSubcommandCandidates(root: SyntaxNode, position: Position): string[
 function getContextCmdArgs(document: TextDocument, root: SyntaxNode, position: Position, dropLast: boolean = false): string[] {
   const p = walkbackIfNeeded(document, root, position);
   let node = _getContextCommandNode(root, p)?.firstNamedChild;
-  if (node?.text === 'sudo') {
+  if (node?.text === 'sudo' || node?.text === 'nohup') {
     node = node.nextSibling;
   }
   let res: string[] = [];
