@@ -10,7 +10,10 @@ import {
 } from 'vscode-languageserver-protocol';
 import type { Command, Option } from './types';
 import CommandFetcher from './commandFetcher';
-import { contains, asRange, translate, lineAt, asPoint, formatTldr, formatUsage, asHover, optsToMessage, isPrefixOf, isSubsequenceOf } from './utils';
+import {
+  contains, asRange, translate, lineAt, asPoint, formatTldr, formatUsage, formatDescription,
+  asHover, optsToMessage, isPrefixOf, isSubsequenceOf
+} from './utils';
 
 
 type Trees = { [uri: string]: Parser.Tree };
@@ -529,7 +532,8 @@ export default class Analyzer {
           const thisCmd = cmdSeq.find((cmd) => cmd.name === currentWord)!;
           const usageText = formatUsage(thisCmd.usage);
           const tldrText = formatTldr(thisCmd.tldr);
-          const msg = `\`${name}\`${usageText}${tldrText}`;
+          const descText = (thisCmd.description !== thisCmd.name && !tldrText) ? formatDescription(thisCmd.description) : "";
+          const msg = `\`${name}\`${descText}${usageText}${tldrText}`;
           // msg.isTrusted = true;      // [FIXME] Need this property in LSP
           return asHover(msg, currentRange);
 

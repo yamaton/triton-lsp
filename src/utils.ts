@@ -95,6 +95,13 @@ export function formatUsage(text: string | undefined): string {
 }
 
 
+// Format description
+export function formatDescription(text: string): string {
+  const trimmed = text.trim();
+  return `\n\n${trimmed}`;
+}
+
+
 // Convert: option -> UI text (string)
 export function optsToMessage(opts: Option[]): string {
   if (opts.length === 1) {
