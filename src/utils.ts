@@ -76,7 +76,12 @@ export function formatTldr(text: string | undefined): string {
     return "";
   }
   const s = text.replace(/{{(.*?)}}/g, "$1");
-  const formatted = s.split("\n").filter((line: string) => !line.trimStart().startsWith("#")).join("\n").trimStart();
+  const formatted = s
+      .split("\n")
+      .filter((line: string) => !line.trimStart().startsWith("#"))
+      .map(line => line.replace(/^`(.*)`$/gi, '    `$1`\n\n'))
+      .join("\n")
+      .trimStart();
   return `\n\n${formatted}`;
 }
 
