@@ -92,11 +92,9 @@ export function formatUsage(text: string | undefined): string {
     return "";
   }
   const trimmed = text.trim();
-  const xs = trimmed.split("\n", 2);
-  const formatted = (xs.length === 1) ?
-    `Usage: \`${trimmed}\`` :
-    `Usage:\n\`\`\`\n${trimmed}\n\`\`\`\n`;
-  return `\n\n${formatted}`;
+  const xs = trimmed.split("\n");
+  const formatted = `Usage:\n\n${xs.map(x => '     ' + x).join("\n")}\n\n`;
+  return `\n\n${formatted}\n`;
 }
 
 
